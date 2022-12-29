@@ -1,4 +1,4 @@
-class Dashboard < ActiveRecord::Base
+class Dashboard < ApplicationRecord
 
 	has_many :services,	:dependent => :destroy
 

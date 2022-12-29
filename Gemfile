@@ -1,44 +1,59 @@
 source 'https://rubygems.org'
-ruby '2.1.3'
+git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-gem 'rails', '4.1.6'
-gem 'sass-rails'
-gem 'uglifier'
-gem 'coffee-rails'
+ruby '3.2.0'
+
+gem 'rails', '>= 7.0.4'	# Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
+gem 'bootsnap', require: false # Reduces boot times through caching; required in config/boot.rb
+
+gem 'jbuilder'			# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
+
+# gem 'sass-rails'
+# gem 'uglifier'
+# gem 'coffee-rails'
 
 # Twitter bootstrap layout.
-gem "therubyracer"
-gem 'twitter-bootstrap-rails'
+# gem 'libv8'
+# gem "therubyracer"
+# gem 'twitter-bootstrap-rails'
 
 # Templating
-gem 'slim-rails'
+# gem 'slim-rails'
 
-gem 'jquery-rails'
-gem 'jquery-ui-rails'
-gem 'pdfkit'
+# gem 'jquery-rails'
+# gem 'jquery-ui-rails'
+# gem 'pdfkit'
+
+gem 'puma' # Better web server
+gem 'pg' # Only PostgreSQL is supported!
 
 # Service-checking stuff.
 gem 'net-ping'		# ICMP pings.
-gem 'poltergeist'	# HTTP screenshots!
+# gem 'poltergeist'	# HTTP screenshots!
+
+gem 'sdoc', group: :doc # bundle exec rake doc:rails generates the API under doc/api.
+
+group :development, :test do
+    gem "debug", platforms: %i[ mri mingw x64_mingw ]
+    gem 'guard'
+    gem 'guard-minitest'
+
+    gem 'rails-controller-testing'
+end
 
 group :development do
-	gem 'sqlite3'
-	gem 'capistrano'
-	gem 'capistrano-ext'
-
-	gem 'rvm-capistrano'
-	gem 'railroady'
-
-	gem 'byebug'
-	# gem	'binding_of_caller'
-	# gem 'better_errors'
+    # gem 'web-console', '~> 2.0'     # Access an IRB console on exception pages or by using <%= console %> in views
+    # gem 'spring' # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
+    gem 'railroady'
+    gem 'rubocop-rails' # For editor reformatting support
+    gem 'web-console'
+    # gem 'rack-mini-profiler', '~> 2.0'
+    # gem 'listen', '~> 3.3'
+    # gem 'binding_of_caller'
+    gem 'prettier'
+    gem 'rubocop'
+    gem 'reek'
 end
 
-group :production do
-	gem 'pg'
-end
-
-group :doc do
-  # bundle exec rake doc:rails generates the API under doc/api.
-  gem 'sdoc', require: false
-end
+# Windows does not include zoneinfo files, so bundle the tzinfo-data gem
+gem "tzinfo-data", platforms: %i[ mingw mswin x64_mingw jruby ]

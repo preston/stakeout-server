@@ -1,17 +1,18 @@
-require 'capybara'
-require 'capybara/poltergeist'
+# require 'capybara'
+# require 'capybara/poltergeist'
 require 'thread'
 
-class Service < ActiveRecord::Base
+class Service < ApplicationRecord
 
 	belongs_to :dashboard
 
+	validates_presence_of :dashboard
 	validates_presence_of :name
 	validates_presence_of :host
 
 	# REFACTOR Nasty that this is a singleton, but it leaks a phantomjs process on #visit :(
 	# https://github.com/jonleighton/poltergeist/issues/348
-	BROWSER = Capybara::Session.new(:poltergeist)
+	# BROWSER = Capybara::Session.new(:poltergeist)
 	BROWSER_LOCK = Mutex.new
 
 	PHOTO_OPTS  = {
