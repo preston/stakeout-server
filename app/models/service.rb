@@ -6,24 +6,19 @@ class Service < ApplicationRecord
 
 	belongs_to :dashboard
 
-	validates_presence_of :dashboard
+	# validates_presence_of :dashboard
 	validates_presence_of :name
 	validates_presence_of :host
 
 	# REFACTOR Nasty that this is a singleton, but it leaks a phantomjs process on #visit :(
 	# https://github.com/jonleighton/poltergeist/issues/348
 	# BROWSER = Capybara::Session.new(:poltergeist)
-	BROWSER_LOCK = Mutex.new
+	# BROWSER_LOCK = Mutex.new
+	# BROWSER = nil
+	# Puppeteer.launch(headless: false, slow_mo: 50, args: ['--window-size=1280,800']) do |browser|
+		# BROWSER = broswer
+	#   end
 
-	PHOTO_OPTS  = {
-	  :x => 0,          # top left position
-	  :y => 0,
-	  :w => 1280,       # bottom right position
-	  :h => 1024,
-	
-	  :wait => 0.5,     # if selector is nil, wait 1 seconds before taking the screenshot
-	  :selector => nil  # wait until the selector matches to take the screenshot
-	}
 
 	def expire_check
 		self.checked_at = nil
@@ -98,27 +93,44 @@ class Service < ApplicationRecord
 			if https
 				uri = URI("https://#{self.host}#{self.http_path}")
 			end
+			puts "URI for screenshot is #{uri.to_s}"
 			begin
-				BROWSER_LOCK.synchronize do
-					puts "Visiting #{uri}"
-					BROWSER.reset!
-					BROWSER.visit uri.to_s
-					sleep 0.100 # Brief artificial delay for rendering. :(
+				self.http_screenshot = nil
+				Puppeteer.launch(headless: true, slow_mo: 50, args: ['--window-size=1280,800']) do |browser|
+
+				# end
+				# BROWSER_LOCK.synchronize do
+					page = browser.new_page
+					page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
+					# page.timeout = 5000
+					page.goto(uri.to_s, timeout: 5000) #, wait_until: 'domcontentloaded')
+					self.http_screenshot = page.screenshot
+					browser.close
+					# puts out.to_s
+			
+					# puts "Visiting #{uri}"
+					# BROWSER.reset!
+					# BROWSER.visit uri.to_s
+					# sleep 0.100 # Brief artificial delay for rendering. :(
 		
-					tmp = Tempfile.new(['screenshot', '.png'])
-					# puts tmp.path
-					begin
-						BROWSER.driver.render tmp.path,
-						  :width  => PHOTO_OPTS[:w] + PHOTO_OPTS[:x],
-						  :height => PHOTO_OPTS[:h] + PHOTO_OPTS[:y]
-						self.http_screenshot = IO.read tmp.path
-					ensure
-						tmp.close # Close and delete the temporary file.
-						tmp.unlink
-					end
+					# tmp = Tempfile.new(['tmp', '.png'])
+					# self.http_screenshot = IO.read 'tmp.png'
+					# debug
+					# puts data
+					# # puts tmp.path
+					# begin
+					# 	BROWSER.driver.render tmp.path,
+					# 	  :width  => PHOTO_OPTS[:w] + PHOTO_OPTS[:x],
+					# 	  :height => PHOTO_OPTS[:h] + PHOTO_OPTS[:y]
+					# 	self.http_screenshot = IO.read tmp.path
+					# ensure
+					# 	tmp.close # Close and delete the temporary file.
+					# 	tmp.unlink
+					# end
 				end
 			rescue
 				# The visit will throw an exception if it times out.
+				puts "Failed to capture screenshot."
 			end
 			
 		end

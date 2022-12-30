@@ -1,5 +1,5 @@
 json.message 'This application server and underlying database connection appear to be healthy.'
-json.product do
+json.server do
     json.datetime Time.now
 end
 json.database do

@@ -1,5 +1,6 @@
 class ServicesController < ApplicationController
-  before_action :set_service, only: %i[show edit update destroy]
+  before_action :set_dashboard, only: %i[create show update destroy]
+  before_action :set_service, only: %i[show update destroy]
 
   # GET /services
   # GET /services.json
@@ -19,37 +20,29 @@ class ServicesController < ApplicationController
   # GET /services/1.json
   def show; end
 
-  # GET /services/new
-  def new
-    @dashboard = Dashboard.find(params[:dashboard_id])
-    @service = Service.new
-    @service.dashboard = @dashboard
-    render partial: 'services/new'
-  end
-
-  # GET /services/1/edit
-  def edit
-    render partial: 'services/edit'
-  end
-
   # POST
   def create
     @service = Service.new(service_params)
+    @service.dashboard = @dashboard
+    # @service.validate
 
     if @service.save
-      render json: @service, status: :created, location: @service
+      # puts @service.errors.to_json
+      render :show, json: @service, status: :created, location: [@service.dashboard, @service]
     else
-      render json: @service.errors, status: :unprocessable_entity
+      puts @service.errors.to_json
+      # render json: @service.errors, status: :unprocessable_entity
     end
   end
 
   # PUT
   def update
+    @service.dashboard = @dashboard
     if @service.update(service_params)
       @service.expire_check
-      head :no_content
+      render :show, json: @service, location: [@service.dashboard, @service]
     else
-      render json: @service.errors, status: :unprocessable_entity
+      render :show, json: @service.errors, status: :unprocessable_entity
     end
   end
 
@@ -61,6 +54,12 @@ class ServicesController < ApplicationController
 
   private
 
+  def set_dashboard
+    # puts "DASH: " + params[:dashboard_id]
+    @dashboard = Dashboard.find(params[:dashboard_id])
+    # puts @dashboard.name
+  end
+  
   # Use callbacks to share common setup or constraints between actions.
   def set_service
     @service = Service.find(params[:id])
@@ -70,5 +69,6 @@ class ServicesController < ApplicationController
   def service_params
     params.require(:service).permit(:name, :dashboard_id, :host, :ping, :ping_threshold, :http, :https,
                                     :http_preview, :http_path, :http_xquery)
+                                    
   end
 end

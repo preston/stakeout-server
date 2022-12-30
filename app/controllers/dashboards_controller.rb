@@ -1,12 +1,12 @@
 class DashboardsController < ApplicationController
-  before_action :set_dashboard, only: [:show, :edit, :update, :destroy]
+  before_action :set_dashboard, only: %i[show update destroy]
 
   # before_action :ensure_active_dashboard_is_set, only: [:index]
 
   # GET /dashboards
   # GET /dashboards.json
   def index
-    @dashboards = Dashboard.all
+    @dashboards = Dashboard.order(name: :asc).all
   end
 
   def check
@@ -21,26 +21,10 @@ class DashboardsController < ApplicationController
     end
   end
 
-  def active
-    d = Dashboard.find(params[:id])
-    set_as_active_dashboard d
-    format.json { render json: d }
-  end
-
   # GET /services/1
   # GET /services/1.json
   def show
     # render :show
-  end
-
-  # GET /services/new
-  def new
-    @service = Service.new
-  end
-
-  # GET /services/1/edit
-  def edit
-    render partial: 'dashboards/edit'
   end
 
   # POST /dashboards
@@ -55,13 +39,10 @@ class DashboardsController < ApplicationController
   end
 
   def update
-
-      if @dashboard.update(dashboard_params)
-       
-         render json: @dashboard 
-      else
-    render json: @dashboard.errors, status: :unprocessable_entity 
-    
+    if @dashboard.update(dashboard_params)
+      render json: @dashboard
+    else
+      render json: @dashboard.errors, status: :unprocessable_entity
     end
   end
 
@@ -69,8 +50,8 @@ class DashboardsController < ApplicationController
   # DELETE /dashboards/1.json
   def destroy
     @dashboard.destroy
-    set_an_active_dashboard
-      render	json: @active_dashboard
+    # set_an_active_dashboard
+    render	json: @active_dashboard
   end
 
   private

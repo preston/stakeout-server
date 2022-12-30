@@ -8,28 +8,13 @@ gem 'bootsnap', require: false # Reduces boot times through caching; required in
 
 gem 'jbuilder'			# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 
-# gem 'sass-rails'
-# gem 'uglifier'
-# gem 'coffee-rails'
-
-# Twitter bootstrap layout.
-# gem 'libv8'
-# gem "therubyracer"
-# gem 'twitter-bootstrap-rails'
-
-# Templating
-# gem 'slim-rails'
-
-# gem 'jquery-rails'
-# gem 'jquery-ui-rails'
-# gem 'pdfkit'
-
 gem 'puma' # Better web server
 gem 'pg' # Only PostgreSQL is supported!
+gem 'rack-cors'	# Allowing cross-origin clients.. which is all of them.
 
 # Service-checking stuff.
 gem 'net-ping'		# ICMP pings.
-# gem 'poltergeist'	# HTTP screenshots!
+gem 'puppeteer-ruby'	# HTTP screenshots!
 
 gem 'sdoc', group: :doc # bundle exec rake doc:rails generates the API under doc/api.
 

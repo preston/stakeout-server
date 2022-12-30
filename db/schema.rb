@@ -22,7 +22,7 @@ ActiveRecord::Schema[7.0].define(version: 0) do
   end
 
   create_table "services", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.integer "dashboard_id"
+    t.uuid "dashboard_id"
     t.string "name", null: false
     t.string "host", null: false
     t.boolean "ping", default: true

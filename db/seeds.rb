@@ -39,7 +39,7 @@ def create_example_dashboard
   Service.create!({
                     dashboard: dash,
                     name: 'BBC',
-                    host: 'bbc.co.uk',
+                    host: 'bbc.com',
                     ping: false,
                     http: true,
                     https: false,
