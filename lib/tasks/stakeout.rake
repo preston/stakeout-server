@@ -15,8 +15,8 @@ namespace :stakeout do
         update_older_than(1.minute.ago)
     end
 
-	desc 'Serially checks all known services not updated within the last minute.'
-	task check_5_minute: :environment do
+	desc 'Serially checks all known services not updated within the 5 minutes.'
+	task check_5_minutes: :environment do
         update_older_than(5.minutes.ago)
     end
 end
