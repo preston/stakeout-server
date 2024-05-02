@@ -99,9 +99,14 @@ class Service < ApplicationRecord
       begin
         self.http_screenshot = nil
         Puppeteer.launch(headless: true, slow_mo: 50,
-                         args: ['--window-size=1280,800',
-                                '--no-sandbox',
-                                '--disable-setuid-sandbox']) do |browser|
+                         args: [
+							 '--disable-gpu',
+							 '--disable-setuid-sandbox',
+							 '--disable-web-security',
+							 '--no-first-run'
+							 '--no-sandbox',
+							 '--window-size=1280,800',
+								]) do |browser|
           # end
           # BROWSER_LOCK.synchronize do
           page = browser.new_page
