@@ -14,7 +14,7 @@ class ApplicationController < ActionController::Base
 
   def http_authenticate
     u = authenticate_with_http_basic do |username, password|
-      puts "username: #{ENV['STAKEOUT_USERNAME']}, password: #{ENV['STAKEOUT_PASSWORD']}"
+      # puts "username: #{ENV['STAKEOUT_USERNAME']}, password: #{ENV['STAKEOUT_PASSWORD']}"
       username == ENV['STAKEOUT_USERNAME'] && password == ENV['STAKEOUT_PASSWORD']
     end
     if(!u)
