@@ -36,6 +36,7 @@ class Service < ApplicationRecord
 
   def check_if_needed
     return if !checked_at.nil? && checked_at < 1.minute.ago
+
     CheckServiceJob.perform_later(self)
   end
 
@@ -128,9 +129,10 @@ class Service < ApplicationRecord
           # 	tmp.unlink
           # end
         end
-      rescue StandardError
+      rescue StandardError => e
         # The visit will throw an exception if it times out.
         puts 'Failed to capture screenshot.'
+        puts e
       end
 
     end
