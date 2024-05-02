@@ -103,9 +103,9 @@ class Service < ApplicationRecord
 							 '--disable-gpu',
 							 '--disable-setuid-sandbox',
 							 '--disable-web-security',
-							 '--no-first-run'
+							 '--no-first-run',
 							 '--no-sandbox',
-							 '--window-size=1280,800',
+							 '--window-size=1280,800'
 								]) do |browser|
           # end
           # BROWSER_LOCK.synchronize do
