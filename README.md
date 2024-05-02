@@ -13,6 +13,8 @@ Start by create a PostgreSQL database and user account and set an environment va
 ```sh
 docker run -it --rm -p 3000:3000 --name stakeout-server \
 	-e "STAKEOUT_DATABASE_URL=postgresql://stakeout:password@192.168.1.131:5432/stakeout_development" \
+	-e "STAKEOUT_USERNAME=stakeout" \
+	-e "STAKEOUT_PASSWORD=password" \
 	p3000/stakeout-server:latest
 ```
 # Building Your Own Image

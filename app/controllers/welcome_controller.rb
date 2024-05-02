@@ -1,10 +1,12 @@
-class WelcomeController < ApplicationController
-  def legal
-  end
+# frozen_string_literal: true
 
-  def about
-  end
+class WelcomeController < ApplicationController
+  before_action :http_authenticate, only: %i[test]
 
   def status
   end
+
+  def test
+  end
+
 end

@@ -1,4 +1,5 @@
 class DashboardsController < ApplicationController
+  before_action :http_authenticate, except: %i[index show]
   before_action :set_dashboard, only: %i[show update destroy]
 
   # before_action :ensure_active_dashboard_is_set, only: [:index]
@@ -7,6 +8,13 @@ class DashboardsController < ApplicationController
   # GET /dashboards.json
   def index
     @dashboards = Dashboard.order(name: :asc).all
+  end
+
+
+  # GET /services/1
+  # GET /services/1.json
+  def show
+    # render :show
   end
 
   def check
@@ -19,12 +27,6 @@ class DashboardsController < ApplicationController
     respond_to do |format|
       format.html { render 'services/index', layout: false }
     end
-  end
-
-  # GET /services/1
-  # GET /services/1.json
-  def show
-    # render :show
   end
 
   # POST /dashboards

@@ -1,4 +1,5 @@
 class ServicesController < ApplicationController
+  before_action :http_authenticate, except: %i[index show]
   before_action :set_dashboard, only: %i[create show update destroy]
   before_action :set_service, only: %i[show update destroy]
 
