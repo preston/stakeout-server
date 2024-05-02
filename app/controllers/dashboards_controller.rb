@@ -10,10 +10,12 @@ class DashboardsController < ApplicationController
     @dashboards = Dashboard.order(name: :asc).all
   end
 
-
   # GET /services/1
   # GET /services/1.json
   def show
+    @dashboard.services.each do |s|
+      s.check_if_needed
+    end
     # render :show
   end
 
@@ -22,11 +24,9 @@ class DashboardsController < ApplicationController
     @since = period.minutes.ago
     d = Dashboard.find(session[:active_dashboard_id])
     d.services.each do |s|
-      s.check
+      s.check_if_needed
     end
-    respond_to do |format|
-      format.html { render 'services/index', layout: false }
-    end
+    rendor json: 'services/index'
   end
 
   # POST /dashboards

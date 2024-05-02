@@ -17,9 +17,20 @@ class ServicesController < ApplicationController
     render layout: false
   end
 
+  def check
+    period = params[:client_period].to_i
+    @since = period.minutes.ago
+    d = Dashboard.find(session[:active_dashboard_id])
+    d.services.each do |s|
+      s.check_if_needed
+    end
+    rendor json: 'services/index'
+  end
+
   # GET /services/1
   # GET /services/1.json
-  def show; end
+  def show
+  end
 
   # POST
   def create

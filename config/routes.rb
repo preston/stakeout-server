@@ -1,13 +1,14 @@
 Stakeout::Application.routes.draw do
+  resources :dashboards do
+    resources :services
+    member do
+      get :check
+    end
+  end
 
-	resources :dashboards do
-		resources :services
-	end
-	
-	# get "welcome/index",	as: 'home'
-	get 'status' => 'welcome#status',	as: 'status'
-	post 'test' => 'welcome#test',	as: 'test'
+  # get "welcome/index",	as: 'home'
+  get 'status' => 'welcome#status',	as: 'status'
+  post 'test' => 'welcome#test',	as: 'test'
 
-	root to: 'dashboards#index'
-
+  root to: 'dashboards#index'
 end
