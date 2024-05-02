@@ -98,7 +98,10 @@ class Service < ApplicationRecord
       puts "URI for screenshot is #{uri}"
       begin
         self.http_screenshot = nil
-        Puppeteer.launch(headless: true, slow_mo: 50, args: ['--window-size=1280,800', '--no-sandbox']) do |browser|
+        Puppeteer.launch(headless: true, slow_mo: 50,
+                         args: ['--window-size=1280,800',
+                                '--no-sandbox',
+                                '--disable-setuid-sandbox']) do |browser|
           # end
           # BROWSER_LOCK.synchronize do
           page = browser.new_page
