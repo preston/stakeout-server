@@ -1,4 +1,4 @@
-FROM ruby:3.3.0-slim
+FROM ruby:3.3.1-slim
 LABEL maintainer="preston.lee@prestonlee.com"
 
 # RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y build-essential imagemagick

@@ -76,11 +76,13 @@ class Service < ApplicationRecord
     end
 
     if https
-      uri = URI("http://#{self.host}#{http_path}")
+      puts "Checking #{self.name} HTTPS"
+      uri = URI("https://#{self.host}#{http_path}")
       good = false
       begin
         Net::HTTP.start(uri.host, uri.port) do |https|
           request = Net::HTTP::Get.new uri
+          request.use_ssl = true
           response = https.request request # Net::HTTPResponse object
           code = response.code.to_i
           # puts "CODE S: #{code}"
