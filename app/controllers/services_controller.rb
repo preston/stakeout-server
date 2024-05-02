@@ -1,31 +1,48 @@
 class ServicesController < ApplicationController
   before_action :http_authenticate, except: %i[index show]
-  before_action :set_dashboard, only: %i[create show update destroy]
+  before_action :set_dashboard #, only: %i[create show update destroy]
   before_action :set_service, only: %i[show update destroy]
 
   # GET /services
   # GET /services.json
   def index
-    period = 0
-    period = params[:period].to_i unless params[:period].nil?
-    @dashboard = Dashboard.find(params[:dashboard_id])
-    @services = @dashboard.services
-    since = Time.now - period
-    @services.each do |s|
-      s.check_if_older_than(since)
+
+    # @services = Service.paginate(page: params[:page], per_page: params[:per_page])
+    @services = Service.where(dashboard: @dashboard)
+    sort = %w[name ping].include?(params[:sort]) ? params[:sort] : :name
+    order = params[:order] == 'desc' ? :desc : :asc
+    @services = @services.order(sort => order) 
+    @services = @services.search_by_name(params[:text]) if params[:text]
+
+
+    # period = 0
+    # period = params[:period].to_i unless params[:period].nil?
+    # @dashboard = Dashboard.find(params[:dashboard_id])
+    # @services = @dashboard.services
+    # since = Time.now - period
+    # @services.each do |s|
+    #   s.check_if_older_than(since)
+    # end
+    # render layout: false
+
+    @dashboard.services.each do |s|
+      if s.check_is_needed
+        CheckServiceJob.perform_later(s.id)
+      else
+        puts "Service #{s.name} doesn't need to be checked. Skipping."
+      end
     end
-    render layout: false
   end
 
-  def check
-    period = params[:client_period].to_i
-    @since = period.minutes.ago
-    d = Dashboard.find(session[:active_dashboard_id])
-    d.services.each do |s|
-      s.check_if_needed
-    end
-    rendor json: 'services/index'
-  end
+  # def check
+  #   period = params[:client_period].to_i
+  #   @since = period.minutes.ago
+  #   d = Dashboard.find(session[:active_dashboard_id])
+  #   d.services.each do |s|
+  #     s.check_if_needed
+  #   end
+  #   rendor json: 'services/index'
+  # end
 
   # GET /services/1
   # GET /services/1.json

@@ -3,6 +3,13 @@
 require 'thread'
 
 class Service < ApplicationRecord
+  include PgSearch::Model
+  # pg_search_scope :search_by_name_or_description, against: %i[name description], using: {
+  pg_search_scope :search_by_name, against: %i[name], using: {
+    #    trigram: {},
+    tsearch: { prefix: true } # Partial words
+  }
+
   belongs_to :dashboard
 
   # validates_presence_of :dashboard
@@ -34,21 +41,21 @@ class Service < ApplicationRecord
     end
   end
 
-
   def check_is_needed
     checked_at.nil? || checked_at < 1.minute.ago
-end
+  end
 
-#   def check_if_needed
-#     if !checked_is_needed
-# puts "Service #{self.name} doesn't need to be checked. Skipping."
-#     else 
-#     CheckServiceJob.perform_later(self)
-#   end
-# end
+  #   def check_if_needed
+  #     if !checked_is_needed
+  # puts "Service #{self.name} doesn't need to be checked. Skipping."
+  #     else
+  #     CheckServiceJob.perform_later(self)
+  #   end
+  # end
 
   def check
-    return if !check_is_needed
+    return unless check_is_needed
+
     self.http_screenshot = nil # Clear the old screenshots, regardless.
 
     if ping
@@ -62,6 +69,7 @@ end
     host = self.host
     path = http_path
     path = '/index.html' if path.nil? || path == ''
+    
     if http
       uri = URI("http://#{self.host}#{http_path}")
       good = false
@@ -73,9 +81,10 @@ end
           # puts "CODE: #{code}"
           self.http_path_last = (code >= 200 && code < 400)
         end
-      rescue StandardError
+      rescue StandardError => e
         # Possibly a DNS failure or something.
         self.http_path_last = false
+        # Rails.logger.debug e
       end
 
       if http_xquery
@@ -84,21 +93,21 @@ end
     end
 
     if https
-      puts "Checking #{self.name} HTTPS"
+      puts "Checking #{name} HTTPS"
       uri = URI("https://#{self.host}#{http_path}")
       good = false
       begin
-        Net::HTTP.start(uri.host, uri.port) do |https|
+        Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
           request = Net::HTTP::Get.new uri
-          request.use_ssl = true
           response = https.request request # Net::HTTPResponse object
           code = response.code.to_i
-          # puts "CODE S: #{code}"
+          # puts "CODE HTTPS: #{code}"
           self.https_path_last = (code >= 200 && code < 400)
         end
-      rescue StandardError
+      rescue StandardError => e
         # Possibly a DNS failure or something.
         self.https_path_last = false
+        # Rails.logger.debug e
       end
     end
 
@@ -110,13 +119,13 @@ end
         self.http_screenshot = nil
         Puppeteer.launch(headless: true, slow_mo: 50,
                          args: [
-							 '--disable-gpu',
-							 '--disable-setuid-sandbox',
-							 '--disable-web-security',
-							 '--no-first-run',
-							 '--no-sandbox',
-							 '--window-size=1280,800'
-								]) do |browser|
+                           '--disable-gpu',
+                           '--disable-setuid-sandbox',
+                           '--disable-web-security',
+                           '--no-first-run',
+                           '--no-sandbox',
+                           '--window-size=1280,800'
+                         ]) do |browser|
           # end
           # BROWSER_LOCK.synchronize do
           page = browser.new_page

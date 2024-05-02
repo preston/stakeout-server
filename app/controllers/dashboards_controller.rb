@@ -7,32 +7,34 @@ class DashboardsController < ApplicationController
   # GET /dashboards
   # GET /dashboards.json
   def index
-    @dashboards = Dashboard.order(name: :asc).all
+    sort = %w[name].include?(params[:sort]) ? params[:sort] : :name
+    order = params[:order] == 'desc' ? :desc : :asc
+    @dashboards = Dashboard.order(sort => order)
+    @dashboards = @dashboards.search_by_name(params[:text]) if params[:text]
   end
 
   # GET /services/1
   # GET /services/1.json
   def show
     @dashboard.services.each do |s|
-
       if s.check_is_needed
         CheckServiceJob.perform_later(s.id)
       else
-              puts "Service #{s.name} doesn't need to be checked. Skipping."
+        puts "Service #{s.name} doesn't need to be checked. Skipping."
       end
     end
     # render :show
   end
 
-  def check
-    period = params[:client_period].to_i
-    @since = period.minutes.ago
-    d = Dashboard.find(session[:active_dashboard_id])
-    d.services.each do |s|
-      s.check_if_needed
-    end
-    rendor json: 'services/index'
-  end
+  # def check
+  #   period = params[:client_period].to_i
+  #   @since = period.minutes.ago
+  #   d = Dashboard.find(session[:active_dashboard_id])
+  #   d.services.each do |s|
+  #     s.check_if_needed
+  #   end
+  #   rendor json: 'services/index'
+  # end
 
   # POST /dashboards
   # POST /dashboards.json
