@@ -1,0 +1,12 @@
+.dockerignore
+.git
+.gitattributes
+.gitignore
+.travis.yml
+
+Dockerfile
+db/*.sql
+log/*.log
+storage/*
+tmp/*
+README.md
