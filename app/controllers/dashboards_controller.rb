@@ -14,7 +14,12 @@ class DashboardsController < ApplicationController
   # GET /services/1.json
   def show
     @dashboard.services.each do |s|
-      s.check_if_needed
+
+      if s.check_is_needed
+        CheckServiceJob.perform_later(s.id)
+      else
+              puts "Service #{s.name} doesn't need to be checked. Skipping."
+      end
     end
     # render :show
   end

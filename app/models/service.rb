@@ -34,13 +34,21 @@ class Service < ApplicationRecord
     end
   end
 
-  def check_if_needed
-    return if !checked_at.nil? && checked_at < 1.minute.ago
 
-    CheckServiceJob.perform_later(self)
-  end
+  def check_is_needed
+    checked_at.nil? || checked_at < 1.minute.ago
+end
+
+#   def check_if_needed
+#     if !checked_is_needed
+# puts "Service #{self.name} doesn't need to be checked. Skipping."
+#     else 
+#     CheckServiceJob.perform_later(self)
+#   end
+# end
 
   def check
+    return if !check_is_needed
     self.http_screenshot = nil # Clear the old screenshots, regardless.
 
     if ping
