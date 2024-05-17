@@ -11,6 +11,7 @@ class Service < ApplicationRecord
   }
 
   belongs_to :dashboard
+  validates_presence_of :dashboard
 
   # validates_presence_of :dashboard
   validates_presence_of :name

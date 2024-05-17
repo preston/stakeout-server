@@ -42,6 +42,8 @@ ActiveRecord::Schema[7.1].define(version: 0) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["dashboard_id", "name"], name: "index_services_on_dashboard_id_and_name", unique: true
+    t.index ["dashboard_id"], name: "index_services_on_dashboard_id"
   end
 
+  add_foreign_key "services", "dashboards"
 end

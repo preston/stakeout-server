@@ -11,7 +11,7 @@ class Collapse < ActiveRecord::Migration[7.0]
   add_index "dashboards", ["name"], name: "index_dashboards_on_name", unique: true
 
   create_table "services", id: :uuid do |t|
-    t.integer  "dashboard_id"
+    t.belongs_to  :dashboard, foreign_key: true, type: :uuid
     t.string   "name",                                             null: false
     t.string   "host",                                             null: false
     t.boolean  "ping",                             default: true
