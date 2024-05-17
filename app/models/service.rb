@@ -10,7 +10,7 @@ class Service < ApplicationRecord
     tsearch: { prefix: true } # Partial words
   }
 
-  belongs_to :dashboard
+  belongs_to :dashboard, touch: true
   validates_presence_of :dashboard
 
   # validates_presence_of :dashboard

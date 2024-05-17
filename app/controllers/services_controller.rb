@@ -9,7 +9,7 @@ class ServicesController < ApplicationController
 
     # @services = Service.paginate(page: params[:page], per_page: params[:per_page])
     @services = Service.where(dashboard: @dashboard)
-    sort = %w[name ping].include?(params[:sort]) ? params[:sort] : :name
+    sort = %w[name ping updated_at created_at].include?(params[:sort]) ? params[:sort] : :name
     order = params[:order] == 'desc' ? :desc : :asc
     @services = @services.order(sort => order) 
     @services = @services.search_by_name(params[:text]) if params[:text]
