@@ -1,5 +1,8 @@
 class Collapse < ActiveRecord::Migration[7.0]
 
+  enable_extension "plpgsql"
+  enable_extension "uuid-ossp"
+  
   create_table "dashboards", id: :uuid do |t|
     t.string   "name"
     t.timestamps
