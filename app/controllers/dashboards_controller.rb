@@ -16,14 +16,14 @@ class DashboardsController < ApplicationController
   # GET /services/1
   # GET /services/1.json
   def show
-    @dashboard.services.each do |s|
-      if s.check_is_needed
-        job = CheckServiceJob.perform_later(s.id)
-        Rails.logger.debug "Enqueued job with key: #{job}"
-      else
-        Rails.logger.debug "Service #{s.name} doesn't need to be checked. Skipping."
-      end
-    end
+    # @dashboard.services.each do |s|
+    #   if s.check_is_needed
+    #     job = CheckServiceJob.perform_later(s.id)
+    #     Rails.logger.debug "Enqueued job with key: #{job}"
+    #   else
+    #     Rails.logger.debug "Service #{s.name} doesn't need to be checked. Skipping."
+    #   end
+    # end
     render :show
   end
 
