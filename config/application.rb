@@ -28,5 +28,11 @@ module Stakeout
     config.active_job.queue_adapter = :good_job
     # Run jobs serially by default.
     config.good_job.max_threads = 1
+    config.good_job.poll_interval = 5 # seconds
+    # config.good_job.preserve_job_records = true
+    config.good_job.cleanup_preserved_jobs_before_seconds_ago = 600
+    # config.good_job.cleanup_interval_jobs = 1_000 # Number of executed jobs between deletion sweeps.
+    config.good_job.cleanup_interval_seconds = 1.minute # Number of seconds between deletion sweeps.
+
   end
 end
