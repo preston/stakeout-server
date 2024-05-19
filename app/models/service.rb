@@ -169,7 +169,7 @@ class Service < ApplicationRecord
           Rails.logger.debug 'Closing browser.'
           # puts 'Closing browser.'
           browser.close
-
+          browser.disconnect
         end
         # if pid > 0
         #   puts "Killing browser process #{pid}"
