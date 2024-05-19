@@ -10,7 +10,10 @@ Stakeout Server is designed to be *extremely* simple to use, and does not suppor
 
 Start by create a PostgreSQL database and user account and set an environment variable for the connection URL. The server will automatically manage the schema future and future updates. To run the server with docker:
 
+
 ```sh
+# You MUST use the --init option to allow Chrome processes to be reaped properly.
+# Failure to do this will result in eventual resource exhaustion and zombie processes within the container.
 docker run -it --rm -p 3000:3000 --name stakeout-server \
 	-e "STAKEOUT_DATABASE_URL=postgresql://stakeout:password@192.168.1.130:5432/stakeout_development" \
 	-e "STAKEOUT_USERNAME=stakeout" \

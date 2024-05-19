@@ -35,10 +35,10 @@ class Service < ApplicationRecord
   def check_if_older_than(date)
     last = checked_at
     if last.nil? || last < date
-      puts "Checking service #{name}."
+      Rails.logger.debug "Checking service #{name}."
       check
     else
-      puts "Skipping service check for #{name}."
+      Rails.logger.debug "Skipping service check for #{name}."
     end
   end
 
@@ -70,7 +70,7 @@ class Service < ApplicationRecord
     host = self.host
     path = http_path
     path = '/index.html' if path.nil? || path == ''
-    
+
     if http
       port = 80 if self.port == 0
       uri = URI("http://#{self.host}:#{port}#{http_path}")
@@ -118,8 +118,9 @@ class Service < ApplicationRecord
       uri = URI("http://#{self.host}:#{self.port == 0 ? 80 : self.port}#{http_path}")
       uri = URI("https://#{self.host}:#{self.port == 0 ? 443 : self.port}#{http_path}") if https
       puts "URI for screenshot is #{uri}"
+      self.http_screenshot = nil
+      # pid = -1
       begin
-        self.http_screenshot = nil
         Puppeteer.launch(headless: true, slow_mo: 50,
                          args: [
                            '--disable-gpu',
@@ -127,16 +128,20 @@ class Service < ApplicationRecord
                            '--disable-web-security',
                            '--no-first-run',
                            '--no-sandbox',
+                           '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
                            '--window-size=1280,800'
                          ]) do |browser|
           # end
           # BROWSER_LOCK.synchronize do
+          # pid = browser.pid
           page = browser.new_page
           page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
           # page.timeout = 5000
           page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
           self.http_screenshot = page.screenshot
+          page.goto('about:blank') # Not sure if this helps
           browser.close
+         
           # puts out.to_s
 
           # puts "Visiting #{uri}"
@@ -164,7 +169,11 @@ class Service < ApplicationRecord
         puts 'Failed to capture screenshot.'
         puts e
       end
-
+      # if pid > 0
+      #   puts "Killing browser process #{pid}"
+      #    # FIXME: This is a hack to kill the browser process in case it didn't exit correctly, which happens.
+      #    `kill -KILL #{pid}`
+      # end
     end
 
     self.checked_at = Time.now
