@@ -1,6 +1,6 @@
-require_relative "boot"
+require_relative 'boot'
 
-require "rails/all"
+require 'rails/all'
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -23,5 +23,10 @@ module Stakeout
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Use the good_job gem for background jobs. https://github.com/bensheldon/good_job
+    config.active_job.queue_adapter = :good_job
+    # Run jobs serially by default.
+    config.good_job.max_threads = 1
   end
 end

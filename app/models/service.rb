@@ -72,7 +72,8 @@ class Service < ApplicationRecord
     path = '/index.html' if path.nil? || path == ''
     
     if http
-      uri = URI("http://#{self.host}#{http_path}")
+      port = 80 if self.port == 0
+      uri = URI("http://#{self.host}:#{port}#{http_path}")
       good = false
       begin
         Net::HTTP.start(uri.host, uri.port) do |http|
@@ -94,8 +95,9 @@ class Service < ApplicationRecord
     end
 
     if https
+      port = 443 if self.port == 0
       puts "Checking #{name} HTTPS"
-      uri = URI("https://#{self.host}#{http_path}")
+      uri = URI("https://#{self.host}:#{port}#{http_path}")
       good = false
       begin
         Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
@@ -113,8 +115,8 @@ class Service < ApplicationRecord
     end
 
     if http_preview && (http || https)
-      uri = URI("http://#{self.host}#{http_path}")
-      uri = URI("https://#{self.host}#{http_path}") if https
+      uri = URI("http://#{self.host}:#{self.port == 0 ? 80 : self.port}#{http_path}")
+      uri = URI("https://#{self.host}:#{self.port == 0 ? 443 : self.port}#{http_path}") if https
       puts "URI for screenshot is #{uri}"
       begin
         self.http_screenshot = nil

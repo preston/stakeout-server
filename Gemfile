@@ -12,6 +12,7 @@ gem 'puma' # Better web server
 gem 'pg' # Only PostgreSQL is supported!
 gem 'pg_search' # Full-text search. RAD!!!
 gem 'rack-cors'	# Allowing cross-origin clients.. which is all of them.
+gem "good_job" # Background jobs.
 
 # Service-checking stuff.
 gem 'net-ping'		# ICMP pings.

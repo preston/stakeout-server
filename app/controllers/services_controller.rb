@@ -1,19 +1,19 @@
 class ServicesController < ApplicationController
   before_action :http_authenticate, except: %i[index show]
-  before_action :set_dashboard #, only: %i[create show update destroy]
+  before_action :set_dashboard # , only: %i[create show update destroy]
   before_action :set_service, only: %i[show update destroy]
 
   # GET /services
   # GET /services.json
   def index
-
     # @services = Service.paginate(page: params[:page], per_page: params[:per_page])
     @services = Service.where(dashboard: @dashboard)
     sort = %w[name ping updated_at created_at].include?(params[:sort]) ? params[:sort] : :name
     order = params[:order] == 'desc' ? :desc : :asc
-    @services = @services.order(sort => order) 
+    @services = @services.order(sort => order)
     @services = @services.search_by_name(params[:text]) if params[:text]
 
+    @with_screenshots = params[:screenshots] == 'true'
 
     # period = 0
     # period = params[:period].to_i unless params[:period].nil?
@@ -88,7 +88,7 @@ class ServicesController < ApplicationController
     @dashboard = Dashboard.find(params[:dashboard_id])
     # puts @dashboard.name
   end
-  
+
   # Use callbacks to share common setup or constraints between actions.
   def set_service
     @service = Service.find(params[:id])
@@ -96,8 +96,8 @@ class ServicesController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def service_params
-    params.require(:service).permit(:name, :dashboard_id, :host, :ping, :ping_threshold, :http, :https,
+    params.require(:service).permit(:name, :dashboard_id, :host, :port,
+                                    :ping, :ping_threshold, :http, :https,
                                     :http_preview, :http_path, :http_xquery)
-                                    
   end
 end
