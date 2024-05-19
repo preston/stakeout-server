@@ -120,62 +120,65 @@ class Service < ApplicationRecord
       puts "URI for screenshot is #{uri}"
       self.http_screenshot = nil
       # pid = -1
-      begin
-        Puppeteer.launch(headless: true, slow_mo: 50,
-                         args: [
-                           '--disable-gpu',
-                           '--disable-setuid-sandbox',
-                           '--disable-web-security',
-                           '--no-first-run',
-                           '--no-sandbox',
-                           '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
-                           '--window-size=1280,800'
-                         ]) do |browser|
-          # end
-          # BROWSER_LOCK.synchronize do
+      Puppeteer.launch(headless: true, slow_mo: 50,
+                       args: [
+                         '--disable-gpu',
+                         '--disable-setuid-sandbox',
+                         '--disable-web-security',
+                         '--no-first-run',
+                         '--no-sandbox',
+                         '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
+                         '--window-size=1280,800'
+                       ]) do |browser|
+        Rails.logger.debug "Attempting to capture screenshot of: + #{uri.to_s}"
+        begin
           # pid = browser.pid
           page = browser.new_page
           page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
           # page.timeout = 5000
           page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
           self.http_screenshot = page.screenshot
-          page.goto('about:blank') # Not sure if this helps
+          # page.goto('about:blank') # Not sure if this helps
+
+        # puts out.to_s
+
+        # puts "Visiting #{uri}"
+        # BROWSER.reset!
+        # BROWSER.visit uri.to_s
+        # sleep 0.100 # Brief artificial delay for rendering. :(
+
+        # tmp = Tempfile.new(['tmp', '.png'])
+        # self.http_screenshot = IO.read 'tmp.png'
+        # debug
+        # puts data
+        # # puts tmp.path
+        # begin
+        # 	BROWSER.driver.render tmp.path,
+        # 	  :width  => PHOTO_OPTS[:w] + PHOTO_OPTS[:x],
+        # 	  :height => PHOTO_OPTS[:h] + PHOTO_OPTS[:y]
+        # 	self.http_screenshot = IO.read tmp.path
+        # ensure
+        # 	tmp.close # Close and delete the temporary file.
+        # 	tmp.unlink
+        # end
+        rescue StandardError => e
+          # Errors can be thrown due to a number of things: DNS, timeout, etc.
+          Rails.logger.debug 'Failed to capture screenshot.'
+          Rails.logger.debug e
+        ensure
+          Rails.logger.debug 'Closing browser.'
+          # puts 'Closing browser.'
           browser.close
-         
-          # puts out.to_s
 
-          # puts "Visiting #{uri}"
-          # BROWSER.reset!
-          # BROWSER.visit uri.to_s
-          # sleep 0.100 # Brief artificial delay for rendering. :(
-
-          # tmp = Tempfile.new(['tmp', '.png'])
-          # self.http_screenshot = IO.read 'tmp.png'
-          # debug
-          # puts data
-          # # puts tmp.path
-          # begin
-          # 	BROWSER.driver.render tmp.path,
-          # 	  :width  => PHOTO_OPTS[:w] + PHOTO_OPTS[:x],
-          # 	  :height => PHOTO_OPTS[:h] + PHOTO_OPTS[:y]
-          # 	self.http_screenshot = IO.read tmp.path
-          # ensure
-          # 	tmp.close # Close and delete the temporary file.
-          # 	tmp.unlink
-          # end
         end
-      rescue StandardError => e
-        # The visit will throw an exception if it times out.
-        puts 'Failed to capture screenshot.'
-        puts e
-      end
-      # if pid > 0
-      #   puts "Killing browser process #{pid}"
-      #    # FIXME: This is a hack to kill the browser process in case it didn't exit correctly, which happens.
-      #    `kill -KILL #{pid}`
-      # end
-    end
+        # if pid > 0
+        #   puts "Killing browser process #{pid}"
+        #    # FIXME: This is a hack to kill the browser process in case it didn't exit correctly, which happens.
+        #    `kill -KILL #{pid}`
+        # end
 
+      end
+    end
     self.checked_at = Time.now
     save!
   end

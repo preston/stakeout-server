@@ -20,7 +20,7 @@ class DashboardsController < ApplicationController
       if s.check_is_needed
         CheckServiceJob.perform_later(s.id)
       else
-        puts "Service #{s.name} doesn't need to be checked. Skipping."
+        Rails.logger.debug "Service #{s.name} doesn't need to be checked. Skipping."
       end
     end
     # render :show
