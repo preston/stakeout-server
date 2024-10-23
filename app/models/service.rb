@@ -121,30 +121,39 @@ class Service < ApplicationRecord
       #                    '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
       #                    '--window-size=1280,800'
       #                  ]) do |browser|
-      Puppeteer.connect(browser_ws_endpoint: ENV['STAKEOUT_SERVER_CHROME_URL']) do |browser|
-        Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
-        begin
-          # pid = browser.pid
-          page = browser.new_page
-          page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
-          # page.timeout = 5000
-          page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
-          self.http_screenshot = page.screenshot
-        rescue StandardError => e
-          # Errors can be thrown due to a number of things: DNS, timeout, etc.
-          Rails.logger.debug 'Failed to capture screenshot.'
-          Rails.logger.debug e
-        ensure
-          Rails.logger.debug 'Closing browser.'
-          # puts 'Closing browser.'
-          browser.close
-          browser.disconnect
-        end
-        # if pid > 0
-        #   puts "Killing browser process #{pid}"
-        #    # FIXME: This is a hack to kill the browser process in case it didn't exit correctly, which happens.
-        #    `kill -KILL #{pid}`
-        # end
+      #
+      # Puppeteer.connect(browser_ws_endpoint: ENV['STAKEOUT_SERVER_CHROME_URL']) do |browser|
+      #   Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
+      #   begin
+      #     page = browser.new_page
+      #     page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
+      #     page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
+      #     self.http_screenshot = page.screenshot
+      #   rescue StandardError => e
+      #     # Errors can be thrown due to a number of things: DNS, timeout, etc.
+      #     Rails.logger.debug 'Failed to capture screenshot.'
+      #     Rails.logger.debug e
+      #   ensure
+      #     Rails.logger.debug 'Closing browser.'
+      #     browser.close
+      #     browser.disconnect
+      #   end
+      # end
+      browser = Puppeteer.connect(browser_ws_endpoint: ENV['STAKEOUT_SERVER_CHROME_URL'])
+      Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
+      begin
+        page = browser.new_page
+        page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
+        page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
+        self.http_screenshot = page.screenshot
+      rescue StandardError => e
+        # Errors can be thrown due to a number of things: DNS, timeout, etc.
+        Rails.logger.debug 'Failed to capture screenshot.'
+        Rails.logger.debug e
+      ensure
+        Rails.logger.debug 'Closing browser.'
+        browser.close
+        browser.disconnect
       end
     end
     self.checked_at = Time.now
