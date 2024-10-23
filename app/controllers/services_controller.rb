@@ -60,7 +60,7 @@ class ServicesController < ApplicationController
       # puts @service.errors.to_json
       render :show, json: @service, status: :created, location: [@service.dashboard, @service]
     else
-      puts @service.errors.to_json
+      Rails.logger.warn @service.errors.to_json
       # render json: @service.errors, status: :unprocessable_entity
     end
   end

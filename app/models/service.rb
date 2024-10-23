@@ -96,7 +96,7 @@ class Service < ApplicationRecord
 
     if https
       port = 443 if self.port == 0
-      puts "Checking #{name} HTTPS"
+      Rails.logger.debug "Checking #{name} HTTPS"
       uri = URI("https://#{self.host}:#{port}#{http_path}")
       good = false
       begin
@@ -117,7 +117,7 @@ class Service < ApplicationRecord
     if http_preview && (http || https)
       uri = URI("http://#{self.host}:#{self.port == 0 ? 80 : self.port}#{http_path}")
       uri = URI("https://#{self.host}:#{self.port == 0 ? 443 : self.port}#{http_path}") if https
-      puts "URI for screenshot is #{uri}"
+      Rails.logger.debug "URI for screenshot is #{uri}"
       self.http_screenshot = nil
       # pid = -1
       # Puppeteer.launch(headless: true, slow_mo: 50,
