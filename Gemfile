@@ -11,7 +11,7 @@ gem 'jbuilder'	# Build JSON APIs with ease. Read more: https://github.com/rails/
 gem 'good_job' # Background jobs.
 gem 'pg' # Only PostgreSQL is supported!
 gem 'pg_search' # Full-text search. RAD!!!
-gem 'puma' # Better web server
+# gem 'puma' # Better web server
 gem 'rack-cors'	# Allowing cross-origin clients.. which is all of them.
 
 # Service-checking stuff.
@@ -19,6 +19,8 @@ gem 'net-ping'	# ICMP pings.
 gem 'puppeteer-ruby'	# HTTP screenshots!
 
 gem 'sdoc', group: :doc # bundle exec rake doc:rails generates the API under doc/api.
+
+# gem 'rbtrace', require: true
 
 group :development, :test do
   gem 'debug', platforms: %i[mri mingw x64_mingw]

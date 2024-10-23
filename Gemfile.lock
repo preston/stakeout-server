@@ -118,11 +118,15 @@ GEM
     et-orbi (1.2.11)
       tzinfo
     ffi (1.17.0-aarch64-linux-gnu)
+    ffi (1.17.0-aarch64-linux-musl)
     ffi (1.17.0-arm-linux-gnu)
+    ffi (1.17.0-arm-linux-musl)
     ffi (1.17.0-arm64-darwin)
     ffi (1.17.0-x86-linux-gnu)
+    ffi (1.17.0-x86-linux-musl)
     ffi (1.17.0-x86_64-darwin)
     ffi (1.17.0-x86_64-linux-gnu)
+    ffi (1.17.0-x86_64-linux-musl)
     formatador (1.1.0)
     fugit (1.11.1)
       et-orbi (~> 1, >= 1.2.11)
@@ -231,8 +235,6 @@ GEM
       method_source (~> 1.0)
     psych (5.1.2)
       stringio
-    puma (6.4.3)
-      nio4r (~> 2.0)
     puppeteer-ruby (0.45.6)
       concurrent-ruby (>= 1.1, < 1.4)
       mime-types (>= 3.0)
@@ -355,11 +357,19 @@ GEM
 
 PLATFORMS
   aarch64-linux
+  aarch64-linux-gnu
+  aarch64-linux-musl
   arm-linux
+  arm-linux-gnu
+  arm-linux-musl
   arm64-darwin
   x86-linux
+  x86-linux-gnu
+  x86-linux-musl
   x86_64-darwin
   x86_64-linux
+  x86_64-linux-gnu
+  x86_64-linux-musl
 
 DEPENDENCIES
   bootsnap
@@ -372,7 +382,6 @@ DEPENDENCIES
   pg
   pg_search
   prettier
-  puma
   puppeteer-ruby
   rack-cors
   railroady
@@ -389,4 +398,4 @@ RUBY VERSION
    ruby 3.3.5p100
 
 BUNDLED WITH
-   2.5.9
+   2.5.19
