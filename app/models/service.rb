@@ -120,17 +120,18 @@ class Service < ApplicationRecord
       puts "URI for screenshot is #{uri}"
       self.http_screenshot = nil
       # pid = -1
-      Puppeteer.launch(headless: true, slow_mo: 50,
-                       args: [
-                         '--disable-gpu',
-                         '--disable-setuid-sandbox',
-                         '--disable-web-security',
-                         '--no-first-run',
-                         '--no-sandbox',
-                         '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
-                         '--window-size=1280,800'
-                       ]) do |browser|
-        Rails.logger.debug "Attempting to capture screenshot of: + #{uri.to_s}"
+      # Puppeteer.launch(headless: true, slow_mo: 50,
+      #                  args: [
+      #                    '--disable-gpu',
+      #                    '--disable-setuid-sandbox',
+      #                    '--disable-web-security',
+      #                    '--no-first-run',
+      #                    '--no-sandbox',
+      #                    '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
+      #                    '--window-size=1280,800'
+      #                  ]) do |browser|
+      Puppeteer.connect(browser_ws_endpoint: 'ws://localhost:3030') do |browser|
+        Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
         begin
           # pid = browser.pid
           page = browser.new_page
@@ -138,7 +139,7 @@ class Service < ApplicationRecord
           # page.timeout = 5000
           page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
           self.http_screenshot = page.screenshot
-          # page.goto('about:blank') # Not sure if this helps
+        # page.goto('about:blank') # Not sure if this helps
 
         # puts out.to_s
 
@@ -176,7 +177,6 @@ class Service < ApplicationRecord
         #    # FIXME: This is a hack to kill the browser process in case it didn't exit correctly, which happens.
         #    `kill -KILL #{pid}`
         # end
-
       end
     end
     self.checked_at = Time.now
