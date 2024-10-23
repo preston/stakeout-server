@@ -5,16 +5,16 @@ default: &default
 
 development:
   <<: *default
-  url:  <%= ENV["STAKEOUT_DATABASE_URL"] %>
+  url:  <%= ENV["STAKEOUT_SERVER_DATABASE_URL"] %>
 
 test:
   <<: *default
-  url:  <%= ENV["STAKEOUT_DATABASE_URL_TEST"] %>
+  url:  <%= ENV["STAKEOUT_SERVER_DATABASE_URL_TEST"] %>
 
 production:
   <<: *default
-  url:  <%= ENV["STAKEOUT_DATABASE_URL"] %>
+  url:  <%= ENV["STAKEOUT_SERVER_DATABASE_URL"] %>
 
 # benchmark:
 #   <<: *default
-#   url:  <%= ENV["STAKEOUT_DATABASE_URL"] %>
+#   url:  <%= ENV["STAKEOUT_SERVER_DATABASE_URL"] %>

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
-
   # We *only* support JSON endpoints.
   before_action :ensure_json_request, except: [:cors_preflight_check]
 
@@ -14,13 +13,12 @@ class ApplicationController < ActionController::Base
 
   def http_authenticate
     u = authenticate_with_http_basic do |username, password|
-      # puts "username: #{ENV['STAKEOUT_USERNAME']}, password: #{ENV['STAKEOUT_PASSWORD']}"
-      username == ENV['STAKEOUT_USERNAME'] && password == ENV['STAKEOUT_PASSWORD']
+      # puts "username: #{ENV['STAKEOUT_SERVER_USERNAME']}, password: #{ENV['STAKEOUT_SERVER_PASSWORD']}"
+      username == ENV['STAKEOUT_SERVER_USERNAME'] && password == ENV['STAKEOUT_SERVER_PASSWORD']
     end
-    if(!u)
-      render json: { message: 'HTTP Basic: Access denied.' }, status: 401
-    end
+    return if u
 
+    render json: { message: 'HTTP Basic: Access denied.' }, status: 401
   end
 
   #   def ensure_active_dashboard_is_set
