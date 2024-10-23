@@ -1,6 +1,6 @@
 # require 'capybara'
 # require 'capybara/poltergeist'
-require 'thread'
+# require 'thread'
 
 class Service < ApplicationRecord
   include PgSearch::Model
@@ -16,15 +16,6 @@ class Service < ApplicationRecord
   # validates_presence_of :dashboard
   validates_presence_of :name
   validates_presence_of :host
-
-  # REFACTOR Nasty that this is a singleton, but it leaks a phantomjs process on #visit :(
-  # https://github.com/jonleighton/poltergeist/issues/348
-  # BROWSER = Capybara::Session.new(:poltergeist)
-  # BROWSER_LOCK = Mutex.new
-  # BROWSER = nil
-  # Puppeteer.launch(headless: false, slow_mo: 50, args: ['--window-size=1280,800']) do |browser|
-  # BROWSER = broswer
-  #   end
 
   def expire_check
     self.checked_at = nil
@@ -139,29 +130,6 @@ class Service < ApplicationRecord
           # page.timeout = 5000
           page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
           self.http_screenshot = page.screenshot
-        # page.goto('about:blank') # Not sure if this helps
-
-        # puts out.to_s
-
-        # puts "Visiting #{uri}"
-        # BROWSER.reset!
-        # BROWSER.visit uri.to_s
-        # sleep 0.100 # Brief artificial delay for rendering. :(
-
-        # tmp = Tempfile.new(['tmp', '.png'])
-        # self.http_screenshot = IO.read 'tmp.png'
-        # debug
-        # puts data
-        # # puts tmp.path
-        # begin
-        # 	BROWSER.driver.render tmp.path,
-        # 	  :width  => PHOTO_OPTS[:w] + PHOTO_OPTS[:x],
-        # 	  :height => PHOTO_OPTS[:h] + PHOTO_OPTS[:y]
-        # 	self.http_screenshot = IO.read tmp.path
-        # ensure
-        # 	tmp.close # Close and delete the temporary file.
-        # 	tmp.unlink
-        # end
         rescue StandardError => e
           # Errors can be thrown due to a number of things: DNS, timeout, etc.
           Rails.logger.debug 'Failed to capture screenshot.'

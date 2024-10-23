@@ -11,7 +11,7 @@ gem 'jbuilder'	# Build JSON APIs with ease. Read more: https://github.com/rails/
 gem 'good_job' # Background jobs.
 gem 'pg' # Only PostgreSQL is supported!
 gem 'pg_search' # Full-text search. RAD!!!
-# gem 'puma' # Better web server
+gem 'puma' # Better web server
 gem 'rack-cors'	# Allowing cross-origin clients.. which is all of them.
 
 # Service-checking stuff.
