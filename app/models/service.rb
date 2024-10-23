@@ -130,7 +130,7 @@ class Service < ApplicationRecord
       #                    '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
       #                    '--window-size=1280,800'
       #                  ]) do |browser|
-      Puppeteer.connect(browser_ws_endpoint: 'ws://localhost:3030') do |browser|
+      Puppeteer.connect(browser_ws_endpoint: ENV['STAKEOUT_SERVER_CHROME_URL']) do |browser|
         Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
         begin
           # pid = browser.pid
