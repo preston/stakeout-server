@@ -1,7 +1,4 @@
-# require 'capybara'
-# require 'capybara/poltergeist'
-# require 'thread'
-require "net/http"
+require 'net/http'
 
 class Service < ApplicationRecord
   include PgSearch::Model
@@ -53,7 +50,7 @@ class Service < ApplicationRecord
   def check
     Rails.logger.info "[CHECK_DEBUG] check start id=#{id} name=#{name} http=#{http} https=#{https} http_preview=#{http_preview}"
     unless check_is_needed
-      Rails.logger.info "[CHECK_DEBUG] check skip (check_is_needed false)"
+      Rails.logger.info '[CHECK_DEBUG] check skip (check_is_needed false)'
       return
     end
 
@@ -69,7 +66,8 @@ class Service < ApplicationRecord
       Rails.logger.info "[CHECK_DEBUG] http start uri=#{uri}"
       good = false
       begin
-        Net::HTTP.start(uri.host, uri.port, open_timeout: CHECK_OPEN_TIMEOUT_SEC, read_timeout: CHECK_READ_TIMEOUT_SEC) do |http|
+        Net::HTTP.start(uri.host, uri.port, open_timeout: CHECK_OPEN_TIMEOUT_SEC,
+                                            read_timeout: CHECK_READ_TIMEOUT_SEC) do |http|
           request = Net::HTTP::Get.new uri
           response = http.request request # Net::HTTPResponse object
           code = response.code.to_i
@@ -94,7 +92,8 @@ class Service < ApplicationRecord
       Rails.logger.info "[CHECK_DEBUG] https start uri=#{uri}"
       good = false
       begin
-        Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: CHECK_OPEN_TIMEOUT_SEC, read_timeout: CHECK_READ_TIMEOUT_SEC) do |https|
+        Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: CHECK_OPEN_TIMEOUT_SEC,
+                                            read_timeout: CHECK_READ_TIMEOUT_SEC) do |https|
           request = Net::HTTP::Get.new uri
           response = https.request request # Net::HTTPResponse object
           code = response.code.to_i
@@ -116,12 +115,12 @@ class Service < ApplicationRecord
       self.http_screenshot = nil
 
       capture_screenshot_via_browserless(uri)
-      Rails.logger.info "[CHECK_DEBUG] screenshot done"
+      Rails.logger.info '[CHECK_DEBUG] screenshot done'
     end
-    Rails.logger.info "[CHECK_DEBUG] save! start"
+    Rails.logger.info '[CHECK_DEBUG] save! start'
     self.checked_at = Time.now
     save!
-    Rails.logger.info "[CHECK_DEBUG] save! done"
+    Rails.logger.info '[CHECK_DEBUG] save! done'
   end
 
   # Browserless REST screenshot API (no Puppeteer). STAKEOUT_SERVER_CHROME_URL can be
@@ -133,42 +132,45 @@ class Service < ApplicationRecord
 
   def capture_screenshot_via_browserless(uri)
     Rails.logger.info "[CHECK_DEBUG] capture_screenshot_via_browserless start uri=#{uri}"
-    chrome_url = ENV["STAKEOUT_SERVER_CHROME_URL"].to_s.strip
+    chrome_url = ENV['STAKEOUT_SERVER_CHROME_URL'].to_s.strip
     if chrome_url.blank?
       self.http_screenshot = nil
-      Rails.logger.info "[CHECK_DEBUG] capture_screenshot skip (CHROME_URL blank)"
+      Rails.logger.info '[CHECK_DEBUG] capture_screenshot skip (CHROME_URL blank)'
       return
     end
 
     rest_base = browserless_rest_base_url(chrome_url)
     unless rest_base
       self.http_screenshot = nil
-      Rails.logger.info "[CHECK_DEBUG] capture_screenshot skip (rest_base nil)"
+      Rails.logger.info '[CHECK_DEBUG] capture_screenshot skip (rest_base nil)'
       return
     end
 
     screenshot_url = "#{rest_base}/screenshot"
-    screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}" if ENV["STAKEOUT_SERVER_CHROME_TOKEN"].present?
+    if ENV['STAKEOUT_SERVER_CHROME_TOKEN'].present?
+      screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}"
+    end
 
     body = {
       url: uri.to_s,
-      options: { type: "png" },
-      gotoOptions: { waitUntil: "networkidle2", timeout: 5000 },
+      options: { type: 'png' },
+      gotoOptions: { waitUntil: 'networkidle2', timeout: 5000 }
     }.to_json
 
     self.http_screenshot = fetch_screenshot_via_http(screenshot_url, body)
-    Rails.logger.info "[CHECK_DEBUG] capture_screenshot_via_browserless done"
+    Rails.logger.info '[CHECK_DEBUG] capture_screenshot_via_browserless done'
   end
 
   def fetch_screenshot_via_http(screenshot_url, body)
     target = URI(screenshot_url)
     Rails.logger.info "[CHECK_DEBUG] fetch_screenshot_via_http start host=#{target.host} port=#{target.port}"
-    result = Net::HTTP.start(target.host, target.port, use_ssl: target.scheme == "https", open_timeout: 5, read_timeout: SCREENSHOT_TIMEOUT_SEC) do |http|
+    result = Net::HTTP.start(target.host, target.port, use_ssl: target.scheme == 'https', open_timeout: 5,
+                                                       read_timeout: SCREENSHOT_TIMEOUT_SEC) do |http|
       request = Net::HTTP::Post.new(target.request_uri)
-      request["Content-Type"] = "application/json"
-      request["Cache-Control"] = "no-cache"
+      request['Content-Type'] = 'application/json'
+      request['Cache-Control'] = 'no-cache'
       request.body = body
-      Rails.logger.info "[CHECK_DEBUG] fetch_screenshot POST request sent, waiting for response..."
+      Rails.logger.info '[CHECK_DEBUG] fetch_screenshot POST request sent, waiting for response...'
       response = http.request(request)
       Rails.logger.info "[CHECK_DEBUG] fetch_screenshot response received code=#{response.code}"
       if response.is_a?(Net::HTTPSuccess) && response.body.present?
@@ -184,7 +186,7 @@ class Service < ApplicationRecord
         nil
       end
     end
-    Rails.logger.info "[CHECK_DEBUG] fetch_screenshot_via_http done"
+    Rails.logger.info '[CHECK_DEBUG] fetch_screenshot_via_http done'
     result
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
     Rails.logger.warn "Browserless Chrome unreachable at #{target&.host}:#{target&.port} - #{e.message}"
@@ -215,29 +217,27 @@ class Service < ApplicationRecord
   # Verifies connectivity to Browserless at STAKEOUT_SERVER_CHROME_URL by requesting a
   # minimal screenshot. Returns [true, message] on success, [false, message] on failure.
   def self.verify_chrome_connection
-    chrome_url = ENV["STAKEOUT_SERVER_CHROME_URL"].to_s.strip
-    if chrome_url.blank?
-      return [false, "STAKEOUT_SERVER_CHROME_URL is blank"]
-    end
+    chrome_url = ENV['STAKEOUT_SERVER_CHROME_URL'].to_s.strip
+    return [false, 'STAKEOUT_SERVER_CHROME_URL is blank'] if chrome_url.blank?
 
     rest_base = new.browserless_rest_base_url(chrome_url)
-    unless rest_base
-      return [false, "Could not build REST base URL from #{chrome_url.inspect}"]
-    end
+    return [false, "Could not build REST base URL from #{chrome_url.inspect}"] unless rest_base
 
     screenshot_url = "#{rest_base}/screenshot"
-    screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}" if ENV["STAKEOUT_SERVER_CHROME_TOKEN"].present?
+    if ENV['STAKEOUT_SERVER_CHROME_TOKEN'].present?
+      screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}"
+    end
     body = {
-      url: "about:blank",
-      options: { type: "png" },
-      gotoOptions: { waitUntil: "networkidle2", timeout: 5000 },
+      url: 'about:blank',
+      options: { type: 'png' },
+      gotoOptions: { waitUntil: 'networkidle2', timeout: 5000 }
     }.to_json
 
     result = new.fetch_screenshot_via_http(screenshot_url, body)
     if result.present? && result.start_with?(PNG_MAGIC)
       [true, "Chrome at #{rest_base} returned PNG (OK)"]
     else
-      [false, result.present? ? "Chrome returned non-PNG body" : "Chrome unreachable or returned error at #{rest_base}"]
+      [false, result.present? ? 'Chrome returned non-PNG body' : "Chrome unreachable or returned error at #{rest_base}"]
     end
   end
 
