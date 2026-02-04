@@ -36,7 +36,7 @@ services:
       - STAKEOUT_SERVER_CHROME_URL=http://stakeout-chrome:3000
       - STAKEOUT_SERVER_USERNAME=stakeout
       - STAKEOUT_SERVER_PASSWORD=password
-      - RAILS_LOG_TO_STDOUT=true
+      - STAKEOUT_SERVER_LOG_TO_STDOUT=true
     networks:
       - stakeout
     depends_on:
