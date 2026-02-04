@@ -30,19 +30,22 @@ docker run -it --rm -p 3000:3000 --name stakeout-server \
 	-e "STAKEOUT_SERVER_CHROME_URL=http://localhost:3030" \
 	-e "STAKEOUT_SERVER_USERNAME=stakeout" \
 	-e "STAKEOUT_SERVER_PASSWORD=password" \
+  -e "STAKEOUT_SERVER_LOG_TO_STDOUT=true" \
 	p3000/stakeout-server:latest
 ```
 
-## Optional: Run the job worker
+## Run The Job Worker
 Background jobs (e.g. service checks) use Solid Queue and run in a separate process. Start the worker with:
 
 ```sh
-bin/jobs
+docker run -it --rm --name stakeout-worker \
+	-e "STAKEOUT_SERVER_DATABASE_URL=postgresql://stakeout:password@192.168.1.130:5432/stakeout_development" \
+	-e "STAKEOUT_SERVER_CHROME_URL=http://localhost:3030" \
+	-e "STAKEOUT_SERVER_USERNAME=stakeout" \
+	-e "STAKEOUT_SERVER_PASSWORD=password" \
+  -e "STAKEOUT_SERVER_LOG_TO_STDOUT=true" \
+	p3000/stakeout-server:latest bundle exec rake solid_queue:start
 ```
-
-Or: `bundle exec rake solid_queue:start`
-
-In production, run the worker on the same or separate hosts so jobs are processed. The web server only enqueues jobs; it does not run them.
 
 **macOS:** If the worker segfaults (e.g. in `pg` at `connect_start`), set before starting the worker:
 `export PGGSSENCMODE=disable` (avoids GSS/Kerberos-related pg gem crash on arm64)

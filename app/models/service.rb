@@ -1,6 +1,7 @@
 # require 'capybara'
 # require 'capybara/poltergeist'
 # require 'thread'
+require "net/http"
 
 class Service < ApplicationRecord
   include PgSearch::Model
