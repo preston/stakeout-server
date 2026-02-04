@@ -2,7 +2,6 @@
 .git
 .gitattributes
 .gitignore
-.travis.yml
 
 Dockerfile
 db/*.sql
