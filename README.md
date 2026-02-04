@@ -2,7 +2,6 @@
 
 A fantastically simple API service for building self-hosted dashboards for SaaS availability monitoring and automatic screenshots over the HTTP and HTTPS, as well as API-only services. Stakeout is written with Ruby on Rails and PostgreSQL. Screenshots are provided by an instance of a headless Chrome container.
 
-
 Stakeout Server is designed to be simple, and does not support complex services verification or really anything outside of basic HTTP(S). So if you're looking for Nagios, use Nagios. :)  HTTP Basic authenication for administrative API access is optional, with no other authentication or authorization provided.
 
 Example full service deployment with Docker:
@@ -11,6 +10,7 @@ Example full service deployment with Docker:
 docker compose -f docker-compose.yml up --pull always --remove-orphans
 ```
 
+The web interface is provided separately as [Stakeout UI](https://github.com/preston/stakeout-ui)
 # Running The Latest Release Images
 
 Start by create a PostgreSQL database and user account and set an environment variable for the connection URL. The server will automatically manage the schema future and future updates. To run the server with docker:
@@ -75,4 +75,8 @@ docker build -t p3000/stakeout-server:latest .
 
 # Attribution
 
-Designed and written by Preston Lee.
+Copyright © 2011-2026 Preston Lee. All rights reserved.
+
+# License
+
+Provided under the Apache 2.0 license.
