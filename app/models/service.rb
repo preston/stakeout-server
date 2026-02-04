@@ -211,6 +211,35 @@ class Service < ApplicationRecord
     end
   end
 
+  # Verifies connectivity to Browserless at STAKEOUT_SERVER_CHROME_URL by requesting a
+  # minimal screenshot. Returns [true, message] on success, [false, message] on failure.
+  def self.verify_chrome_connection
+    chrome_url = ENV["STAKEOUT_SERVER_CHROME_URL"].to_s.strip
+    if chrome_url.blank?
+      return [false, "STAKEOUT_SERVER_CHROME_URL is blank"]
+    end
+
+    rest_base = new.browserless_rest_base_url(chrome_url)
+    unless rest_base
+      return [false, "Could not build REST base URL from #{chrome_url.inspect}"]
+    end
+
+    screenshot_url = "#{rest_base}/screenshot"
+    screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}" if ENV["STAKEOUT_SERVER_CHROME_TOKEN"].present?
+    body = {
+      url: "about:blank",
+      options: { type: "png" },
+      gotoOptions: { waitUntil: "networkidle2", timeout: 5000 },
+    }.to_json
+
+    result = new.fetch_screenshot_via_http(screenshot_url, body)
+    if result.present? && result.start_with?(PNG_MAGIC)
+      [true, "Chrome at #{rest_base} returned PNG (OK)"]
+    else
+      [false, result.present? ? "Chrome returned non-PNG body" : "Chrome unreachable or returned error at #{rest_base}"]
+    end
+  end
+
   def known_good(since)
     known = false
     if !checked_at.nil? && (since.nil? || checked_at >= since)

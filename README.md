@@ -27,7 +27,7 @@ docker run -it --rm --name chrome \
 ```sh
 docker run -it --rm -p 3000:3000 --name stakeout-server \
 	-e "STAKEOUT_SERVER_DATABASE_URL=postgresql://stakeout:password@192.168.1.130:5432/stakeout_development" \
-	-e "STAKEOUT_SERVER_CHROME_URL=ws://localhost:3030" \
+	-e "STAKEOUT_SERVER_CHROME_URL=http://localhost:3030" \
 	-e "STAKEOUT_SERVER_USERNAME=stakeout" \
 	-e "STAKEOUT_SERVER_PASSWORD=password" \
 	p3000/stakeout-server:latest

@@ -19,6 +19,13 @@ namespace :stakeout do
   end
 
   namespace :verify do
+    desc 'Verify Chrome (Browserless) at STAKEOUT_SERVER_CHROME_URL can be reached and returns a screenshot.'
+    task chrome: :environment do
+      ok, message = Service.verify_chrome_connection
+      puts "Chrome verification: #{message}"
+      exit(ok ? 0 : 1)
+    end
+
     desc 'Verify Solid Queue: DB connectivity and job table counts.'
     task solid_queue: :environment do
       puts "Solid Queue verification"
