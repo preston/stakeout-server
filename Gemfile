@@ -1,10 +1,10 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.3.5'
+ruby '4.0.1'
 
 gem 'bootsnap', require: false # Reduces boot times through caching; required in config/boot.rb
-gem 'rails', '>= 7.2.1.1'	# Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
+gem 'rails', '~> 8.1.2'	# Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 
 gem 'jbuilder'	# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 
@@ -33,6 +33,7 @@ end
 group :development do
   # gem 'web-console', '~> 2.0'     # Access an IRB console on exception pages or by using <%= console %> in views
   # gem 'spring' # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
+  gem 'ostruct' # Required by railroady on Ruby 4+ (no longer in default gems)
   gem 'railroady'
   gem 'rubocop-rails' # For editor reformatting support
   gem 'web-console'

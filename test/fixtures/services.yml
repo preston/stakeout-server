@@ -1,5 +1,16 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
 
+one:
+  dashboard: one
+  name: Example Service
+  host: example.com
+  ping: true
+  http: true
+  https: false
+  http_path: ""
+  http_xquery:
+  port: 80
+
 wsj:
   dashboard: news_sites
   name: Wall Street Journal

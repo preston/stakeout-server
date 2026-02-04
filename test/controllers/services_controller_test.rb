@@ -2,48 +2,47 @@ require 'test_helper'
 
 class ServicesControllerTest < ActionController::TestCase
   setup do
+    @dashboard = dashboards(:one)
     @service = services(:one)
+    @request.env["HTTP_AUTHORIZATION"] = ActionController::HttpAuthentication::Basic.encode_credentials(
+      ENV["STAKEOUT_SERVER_USERNAME"], ENV["STAKEOUT_SERVER_PASSWORD"]
+    )
   end
 
   test "should get index" do
-    get :index
+    get :index, params: { dashboard_id: @dashboard }, as: :json
     assert_response :success
     assert_not_nil assigns(:services)
   end
 
-  test "should get new" do
-    get :new
+  test "should show service" do
+    get :show, params: { dashboard_id: @dashboard, id: @service }, as: :json
     assert_response :success
   end
 
   test "should create service" do
     assert_difference('Service.count') do
-      post :create, service: @service.attributes
+      post :create, params: {
+        dashboard_id: @dashboard,
+        service: { name: "New Service", host: "host.example.com", dashboard_id: @dashboard.id }
+      }, as: :json
     end
-
-    assert_redirected_to service_path(assigns(:service))
-  end
-
-  test "should show service" do
-    get :show, id: @service
-    assert_response :success
-  end
-
-  test "should get edit" do
-    get :edit, id: @service
-    assert_response :success
+    assert_response :created
   end
 
   test "should update service" do
-    put :update, id: @service, service: @service.attributes
-    assert_redirected_to service_path(assigns(:service))
+    patch :update, params: {
+      dashboard_id: @dashboard,
+      id: @service,
+      service: { name: @service.name, host: @service.host }
+    }, as: :json
+    assert_response :success
   end
 
   test "should destroy service" do
     assert_difference('Service.count', -1) do
-      delete :destroy, id: @service
+      delete :destroy, params: { dashboard_id: @dashboard, id: @service }, as: :json
     end
-
-    assert_redirected_to services_path
+    assert_response :success
   end
 end

@@ -3,47 +3,38 @@ require 'test_helper'
 class DashboardsControllerTest < ActionController::TestCase
   setup do
     @dashboard = dashboards(:one)
+    @request.env["HTTP_AUTHORIZATION"] = ActionController::HttpAuthentication::Basic.encode_credentials(
+      ENV["STAKEOUT_SERVER_USERNAME"], ENV["STAKEOUT_SERVER_PASSWORD"]
+    )
   end
 
   test "should get index" do
-    get :index
+    get :index, as: :json
     assert_response :success
     assert_not_nil assigns(:dashboards)
   end
 
-  test "should get new" do
-    get :new
+  test "should show dashboard" do
+    get :show, params: { id: @dashboard }, as: :json
     assert_response :success
   end
 
   test "should create dashboard" do
     assert_difference('Dashboard.count') do
-      post :create, dashboard: @dashboard.attributes
+      post :create, params: { dashboard: { name: @dashboard.name + " Copy" } }, as: :json
     end
-
-    assert_redirected_to dashboard_path(assigns(:dashboard))
-  end
-
-  test "should show dashboard" do
-    get :show, id: @dashboard
-    assert_response :success
-  end
-
-  test "should get edit" do
-    get :edit, id: @dashboard
-    assert_response :success
+    assert_response :created
   end
 
   test "should update dashboard" do
-    put :update, id: @dashboard, dashboard: @dashboard.attributes
-    assert_redirected_to dashboard_path(assigns(:dashboard))
+    patch :update, params: { id: @dashboard, dashboard: { name: @dashboard.name } }, as: :json
+    assert_response :success
   end
 
   test "should destroy dashboard" do
     assert_difference('Dashboard.count', -1) do
-      delete :destroy, id: @dashboard
+      delete :destroy, params: { id: @dashboard }, as: :json
     end
-
-    assert_redirected_to dashboards_path
+    assert_response :success
   end
 end
