@@ -1,0 +1,46 @@
+name: stakeout
+networks:
+  stakeout:
+services:
+  stakeout-ui:
+    image: p3000/stakeout-ui:latest
+    ports:
+      - "4200:80"
+    environment:
+      - STAKEOUT_UI_SERVER_URL=http://localhost:3000
+      - STAKEOUT_UI_TITLE="My Stakeout"
+  stakeout-worker:
+    image: p3000/stakeout-server:latest
+    command: bin/jobs
+    environment:
+      - STAKEOUT_SERVER_DATABASE_URL=postgresql://stakeout:password@stakeout-postgresql:5432/stakeout"
+      - STAKEOUT_SERVER_CHROME_URL=ws://stakeout-chrome:3000"
+      - STAKEOUT_SERVER_USERNAME=stakeout
+      - STAKEOUT_SERVER_PASSWORD=password
+    networks:
+      - stakeout
+  stakeout-chrome:
+    image: browserless/chrome:latest
+    environment:
+      - ENABLE_DEBUGGER=false
+      - DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true
+      - DEFAULT_BLOCK_ADS=true
+    networks:
+      - stakeout
+  stakeout-server:
+    image: p3000/stakeout-server:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - STAKEOUT_SERVER_DATABASE_URL=postgresql://stakeout:password@stakeout-postgresql:5432/stakeout"
+      - STAKEOUT_SERVER_CHROME_URL=ws://stakeout-chrome:3000"
+      - STAKEOUT_SERVER_USERNAME=stakeout
+      - STAKEOUT_SERVER_PASSWORD=password
+  stakeout-postgresql:
+    image: postgres:18
+    environment:
+      - POSTGRES_USER=stakeout
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=stakeout
+    networks:
+      - stakeout

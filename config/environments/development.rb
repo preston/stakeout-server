@@ -33,14 +33,6 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Run jobs in a thread pool so requests don't block; async executor is shut down on SIGINT/SIGTERM (see initializer).
-  # Cap the async pool so we don't spawn too many threads (and exhaust DB pool); jobs can block on HTTP/Chrome.
-  config.active_job.queue_adapter = ActiveJob::QueueAdapters::AsyncAdapter.new(
-    min_threads: 1,
-    max_threads: 4,
-    idletime: 60.seconds
-  )
-
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 

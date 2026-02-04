@@ -24,15 +24,10 @@ module Stakeout
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    # Use the good_job gem for background jobs. https://github.com/bensheldon/good_job
-    config.active_job.queue_adapter = :good_job
-    # Run jobs serially by default.
-    config.good_job.max_threads = 1
-    config.good_job.poll_interval = 5 # seconds
-    # config.good_job.preserve_job_records = true
-    config.good_job.cleanup_preserved_jobs_before_seconds_ago = 600
-    # config.good_job.cleanup_interval_jobs = 1_000 # Number of executed jobs between deletion sweeps.
-    config.good_job.cleanup_interval_seconds = 1.minute # Number of seconds between deletion sweeps.
+    # Disable Active Storage variant processing (no image_processing gem; API stores binary only).
+    config.active_storage.variant_processor = :disabled
 
+    # Solid Queue (Postgres-backed Active Job, Rails 8 default). Jobs run via bin/jobs or rake solid_queue:start.
+    config.active_job.queue_adapter = :solid_queue
   end
 end

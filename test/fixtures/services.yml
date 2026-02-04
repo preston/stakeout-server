@@ -4,7 +4,6 @@ one:
   dashboard: one
   name: Example Service
   host: example.com
-  ping: true
   http: true
   https: false
   http_path: ""
@@ -15,7 +14,6 @@ wsj:
   dashboard: news_sites
   name: Wall Street Journal
   host: www.wsj.com
-  ping: true
   http: true
   http_path: "" 
   http_xquery:
@@ -24,7 +22,6 @@ nyt:
   dashboard: news_sites
   name: New York Times
   host: www.nytimes.com
-  ping: false
   http: true
   http_path: ""
   http_xquery: 
@@ -33,7 +30,6 @@ google:
   dashboard: search_services
   name: Google
   host: www.google.com
-  ping: true
   http: true
   http_path: /index.html
   http_xquery:
@@ -42,7 +38,6 @@ bing:
   dashboard: search_services
   name: Bing
   host: www.bing.com
-  ping: true
   http: true
   http_path: /
   http_xquery:

@@ -51,8 +51,8 @@ Rails.application.configure do
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
 
-  # Use a real queuing backend for Active Job (and separate queues per environment).
-  # config.active_job.queue_adapter     = :resque
+  # Solid Queue (same Postgres as app). Jobs run via bin/jobs or rake solid_queue:start.
+  config.active_job.queue_adapter = :solid_queue
   # config.active_job.queue_name_prefix = "stakeout_production"
 
   config.action_mailer.perform_caching = false

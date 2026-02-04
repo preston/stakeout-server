@@ -8,15 +8,13 @@ gem 'rails', '~> 8.1.2'	# Bundle edge Rails instead: gem 'rails', github: 'rails
 
 gem 'jbuilder'	# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 
-gem 'good_job' # Background jobs.
+gem 'solid_queue' # Postgres-backed Active Job (Rails 8 default).
 gem 'pg' # Only PostgreSQL is supported!
 gem 'pg_search' # Full-text search. RAD!!!
 gem 'puma' # Better web server
 gem 'rack-cors'	# Allowing cross-origin clients.. which is all of them.
 
-# Service-checking stuff.
-gem 'net-ping'	# ICMP pings.
-gem 'puppeteer-ruby'	# HTTP screenshots!
+# Screenshots via Browserless REST API (STAKEOUT_SERVER_CHROME_URL), no gem needed.
 
 gem 'sdoc', group: :doc # bundle exec rake doc:rails generates the API under doc/api.
 

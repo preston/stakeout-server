@@ -13,7 +13,7 @@ Start by create a PostgreSQL database and user account and set an environment va
 
 ## Run a Browserless Chrome Instance
 ```sh
-# This worker is solely responsible for capturing screenshots via WebSocket API.
+# This container captures screenshots via its REST API (POST /screenshot).
 docker run -it --rm --name chrome \
   -e "ENABLE_DEBUGGER=false" \
   -e "DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true" \
@@ -33,10 +33,21 @@ docker run -it --rm -p 3000:3000 --name stakeout-server \
 	p3000/stakeout-server:latest
 ```
 
-## Optional: Run Another Worker
-In development mode, background job processing will happen automatically. You do not need to start a seperate worker. If you would one, however, simply run another instance of the server with `bundle exec good_job start` appended to the end.
+## Optional: Run the job worker
+Background jobs (e.g. service checks) use Solid Queue and run in a separate process. Start the worker with:
 
-Note: Running a separate worker(s) is _required_ when running the server in production mode, as the built-in job runner is disabled by default.
+```sh
+bin/jobs
+```
+
+Or: `bundle exec rake solid_queue:start`
+
+In production, run the worker on the same or separate hosts so jobs are processed. The web server only enqueues jobs; it does not run them.
+
+**macOS:** If the worker segfaults (e.g. in `pg` at `connect_start`), set before starting the worker:
+`export PGGSSENCMODE=disable` (avoids GSS/Kerberos-related pg gem crash on arm64)
+
+The app also sets `gssencmode: disable` in `config/database.yml` by default.
 
 # Building Your Own Image
 

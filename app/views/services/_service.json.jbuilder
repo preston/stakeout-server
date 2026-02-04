@@ -1,4 +1,4 @@
-json.extract! service, :id, :dashboard_id, :name, :host, :port, :ping, :ping_threshold, :ping_last, :http, :https,
+json.extract! service, :id, :dashboard_id, :name, :host, :port, :http, :https,
               :http_path, :http_path_last, :https_path_last, :http_xquery, :http_xquery_last, :http_preview,
               :checked_at, :created_at, :updated_at
 

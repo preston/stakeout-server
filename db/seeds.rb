@@ -4,7 +4,6 @@ def create_example_dashboard
                     dashboard: dash,
                     name: 'Google',
                     host: 'www.google.com',
-                    ping: true,
                     http: true,
                     https: true,
                     http_preview: true
@@ -13,7 +12,6 @@ def create_example_dashboard
                     dashboard: dash,
                     name: 'ASU',
                     host: 'www.asu.edu',
-                    ping: true,
                     http: true,
                     https: true,
                     http_preview: true
@@ -22,7 +20,6 @@ def create_example_dashboard
                     dashboard: dash,
                     name: 'NIH',
                     host: 'nih.gov',
-                    ping: false,
                     http: true,
                     https: false,
                     http_preview: true
@@ -31,7 +28,6 @@ def create_example_dashboard
                     dashboard: dash,
                     name: 'New York Times',
                     host: 'nytimes.com',
-                    ping: false,
                     http: true,
                     https: false,
                     http_preview: true
@@ -40,7 +36,6 @@ def create_example_dashboard
                     dashboard: dash,
                     name: 'BBC',
                     host: 'bbc.com',
-                    ping: false,
                     http: true,
                     https: false,
                     http_preview: true
@@ -57,7 +52,6 @@ def create_cloud_dashboard
                       dashboard: dash,
                       name: "Controller #{n}",
                       host: "controller0#{n}.#{domain}",
-                      ping: true,
                       http: false,
                       http_preview: false
                     })
@@ -68,7 +62,6 @@ def create_cloud_dashboard
                       dashboard: dash,
                       name: "Node #{n}",
                       host: "node0#{n}.#{domain}",
-                      ping: true,
                       http: false,
                       http_preview: false
                     })

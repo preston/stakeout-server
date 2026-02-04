@@ -45,19 +45,19 @@ class Service < ApplicationRecord
   #   end
   # end
 
+  # Timeouts for service checks so the worker never blocks on slow/unresponsive targets.
+  CHECK_OPEN_TIMEOUT_SEC = 5
+  CHECK_READ_TIMEOUT_SEC = 10
+
   def check
-    return unless check_is_needed
+    Rails.logger.info "[CHECK_DEBUG] check start id=#{id} name=#{name} http=#{http} https=#{https} http_preview=#{http_preview}"
+    unless check_is_needed
+      Rails.logger.info "[CHECK_DEBUG] check skip (check_is_needed false)"
+      return
+    end
 
     self.http_screenshot = nil # Clear the old screenshots, regardless.
 
-    if ping
-      p = Net::Ping::External.new(host)
-      self.ping_last = if p.ping
-                         (p.duration * 1000).to_i
-                       else
-                         -1
-                       end
-    end
     host = self.host
     path = http_path
     path = '/index.html' if path.nil? || path == ''
@@ -65,9 +65,10 @@ class Service < ApplicationRecord
     if http
       port = 80 if self.port == 0
       uri = URI("http://#{self.host}:#{port}#{http_path}")
+      Rails.logger.info "[CHECK_DEBUG] http start uri=#{uri}"
       good = false
       begin
-        Net::HTTP.start(uri.host, uri.port) do |http|
+        Net::HTTP.start(uri.host, uri.port, open_timeout: CHECK_OPEN_TIMEOUT_SEC, read_timeout: CHECK_READ_TIMEOUT_SEC) do |http|
           request = Net::HTTP::Get.new uri
           response = http.request request # Net::HTTPResponse object
           code = response.code.to_i
@@ -79,6 +80,7 @@ class Service < ApplicationRecord
         self.http_path_last = false
         # Rails.logger.debug e
       end
+      Rails.logger.info "[CHECK_DEBUG] http done http_path_last=#{http_path_last}"
 
       if http_xquery
         # TODO
@@ -87,11 +89,11 @@ class Service < ApplicationRecord
 
     if https
       port = 443 if self.port == 0
-      Rails.logger.debug "Checking #{name} HTTPS"
       uri = URI("https://#{self.host}:#{port}#{http_path}")
+      Rails.logger.info "[CHECK_DEBUG] https start uri=#{uri}"
       good = false
       begin
-        Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
+        Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: CHECK_OPEN_TIMEOUT_SEC, read_timeout: CHECK_READ_TIMEOUT_SEC) do |https|
           request = Net::HTTP::Get.new uri
           response = https.request request # Net::HTTPResponse object
           code = response.code.to_i
@@ -103,71 +105,119 @@ class Service < ApplicationRecord
         self.https_path_last = false
         # Rails.logger.debug e
       end
+      Rails.logger.info "[CHECK_DEBUG] https done https_path_last=#{https_path_last}"
     end
 
     if http_preview && (http || https)
       uri = URI("http://#{self.host}:#{self.port == 0 ? 80 : self.port}#{http_path}")
       uri = URI("https://#{self.host}:#{self.port == 0 ? 443 : self.port}#{http_path}") if https
-      Rails.logger.debug "URI for screenshot is #{uri}"
+      Rails.logger.info "[CHECK_DEBUG] screenshot start uri=#{uri}"
       self.http_screenshot = nil
-      # pid = -1
-      # Puppeteer.launch(headless: true, slow_mo: 50,
-      #                  args: [
-      #                    '--disable-gpu',
-      #                    '--disable-setuid-sandbox',
-      #                    '--disable-web-security',
-      #                    '--no-first-run',
-      #                    '--no-sandbox',
-      #                    '--disable-dev-shm-usage', # https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
-      #                    '--window-size=1280,800'
-      #                  ]) do |browser|
 
-      Puppeteer.connect(browser_ws_endpoint: ENV['STAKEOUT_SERVER_CHROME_URL']) do |browser|
-        Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
-        begin
-          page = browser.new_page
-          page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
-          page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
-          self.http_screenshot = page.screenshot
-        rescue StandardError => e
-          # Errors can be thrown due to a number of things: DNS, timeout, etc.
-          Rails.logger.debug 'Failed to capture screenshot.'
-          Rails.logger.debug e
-        ensure
-          Rails.logger.debug 'Closing browser.'
-          browser.close
-          browser.disconnect
-        end
-      end
-      # browser = Puppeteer.connect(browser_ws_endpoint: ENV['STAKEOUT_SERVER_CHROME_URL'])
-      # Rails.logger.debug "Attempting to capture screenshot of: + #{uri}"
-      # begin
-      #   page = browser.new_page
-      #   page.viewport = Puppeteer::Viewport.new(width: 1280, height: 1280)
-      #   page.goto(uri.to_s, timeout: 5000) # , wait_until: 'domcontentloaded')
-      #   self.http_screenshot = page.screenshot
-      # rescue StandardError => e
-      #   # Errors can be thrown due to a number of things: DNS, timeout, etc.
-      #   Rails.logger.debug 'Failed to capture screenshot.'
-      #   Rails.logger.debug e
-      # ensure
-      #   Rails.logger.debug 'Closing browser.'
-      #   browser.close
-      #   browser.disconnect
-      # end
+      capture_screenshot_via_browserless(uri)
+      Rails.logger.info "[CHECK_DEBUG] screenshot done"
     end
+    Rails.logger.info "[CHECK_DEBUG] save! start"
     self.checked_at = Time.now
     save!
+    Rails.logger.info "[CHECK_DEBUG] save! done"
+  end
+
+  # Browserless REST screenshot API (no Puppeteer). STAKEOUT_SERVER_CHROME_URL can be
+  # ws://host:port (we use http://) or already http(s)://. Optional STAKEOUT_SERVER_CHROME_TOKEN.
+  SCREENSHOT_TIMEOUT_SEC = 15
+
+  # PNG magic bytes; used to verify Browserless returned an image, not an error body.
+  PNG_MAGIC = "\x89PNG\r\n\x1A\n".b
+
+  def capture_screenshot_via_browserless(uri)
+    Rails.logger.info "[CHECK_DEBUG] capture_screenshot_via_browserless start uri=#{uri}"
+    chrome_url = ENV["STAKEOUT_SERVER_CHROME_URL"].to_s.strip
+    if chrome_url.blank?
+      self.http_screenshot = nil
+      Rails.logger.info "[CHECK_DEBUG] capture_screenshot skip (CHROME_URL blank)"
+      return
+    end
+
+    rest_base = browserless_rest_base_url(chrome_url)
+    unless rest_base
+      self.http_screenshot = nil
+      Rails.logger.info "[CHECK_DEBUG] capture_screenshot skip (rest_base nil)"
+      return
+    end
+
+    screenshot_url = "#{rest_base}/screenshot"
+    screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}" if ENV["STAKEOUT_SERVER_CHROME_TOKEN"].present?
+
+    body = {
+      url: uri.to_s,
+      options: { type: "png" },
+      gotoOptions: { waitUntil: "networkidle2", timeout: 5000 },
+    }.to_json
+
+    self.http_screenshot = fetch_screenshot_via_http(screenshot_url, body)
+    Rails.logger.info "[CHECK_DEBUG] capture_screenshot_via_browserless done"
+  end
+
+  def fetch_screenshot_via_http(screenshot_url, body)
+    target = URI(screenshot_url)
+    Rails.logger.info "[CHECK_DEBUG] fetch_screenshot_via_http start host=#{target.host} port=#{target.port}"
+    result = Net::HTTP.start(target.host, target.port, use_ssl: target.scheme == "https", open_timeout: 5, read_timeout: SCREENSHOT_TIMEOUT_SEC) do |http|
+      request = Net::HTTP::Post.new(target.request_uri)
+      request["Content-Type"] = "application/json"
+      request["Cache-Control"] = "no-cache"
+      request.body = body
+      Rails.logger.info "[CHECK_DEBUG] fetch_screenshot POST request sent, waiting for response..."
+      response = http.request(request)
+      Rails.logger.info "[CHECK_DEBUG] fetch_screenshot response received code=#{response.code}"
+      if response.is_a?(Net::HTTPSuccess) && response.body.present?
+        data = response.body.dup.force_encoding(Encoding::BINARY)
+        if data.start_with?(PNG_MAGIC)
+          data
+        else
+          Rails.logger.warn "Browserless screenshot returned non-PNG body (Content-Type: #{response['Content-Type']})"
+          nil
+        end
+      else
+        Rails.logger.warn "Browserless screenshot failed: HTTP #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+        nil
+      end
+    end
+    Rails.logger.info "[CHECK_DEBUG] fetch_screenshot_via_http done"
+    result
+  rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
+    Rails.logger.warn "Browserless Chrome unreachable at #{target&.host}:#{target&.port} - #{e.message}"
+    nil
+  rescue Timeout::Error, Net::OpenTimeout, Net::ReadTimeout => e
+    Rails.logger.warn "Browserless screenshot timeout - #{e.message}"
+    nil
+  rescue StandardError => e
+    Rails.logger.warn "Browserless screenshot error: #{e.class} - #{e.message}"
+    nil
+  end
+
+  def browserless_rest_base_url(chrome_url)
+    return nil if chrome_url.blank?
+
+    case chrome_url
+    when %r{\Awss://(.*)\z}i
+      "https://#{Regexp.last_match(1)}"
+    when %r{\Aws://(.*)\z}i
+      "http://#{Regexp.last_match(1)}"
+    when %r{\Ahttps?://}
+      chrome_url
+    else
+      "http://#{chrome_url}"
+    end
   end
 
   def known_good(since)
     known = false
     if !checked_at.nil? && (since.nil? || checked_at >= since)
-      ping_good = !ping || (!ping_last.nil? && ping_last >= 0 && ping_last <= ping_threshold)
       http_good = !http || http_path_last
       https_good = !https || https_path_last
       # TODO: xquery_good = (self.http_xquery.nil? || self.http_xquery == '' || (self.http_xquery && TODO))
-      known = true if ping_good && http_good && https_good
+      known = true if http_good && https_good
     end
     known
   end
@@ -175,11 +225,10 @@ class Service < ApplicationRecord
   def known_bad(since)
     known = false
     if (checked_at && since.nil?) || (!since.nil? && checked_at >= since)
-      ping_bad = ping && !ping_last.nil? && (ping_last > ping_threshold || ping_last < 0)
       http_bad = http && !http_path_last
       https_bad = https && !https_path_last
       # xquery_bad = self.http_xquery && TODO
-      known = true if ping_bad || http_bad || https_bad
+      known = true if http_bad || https_bad
     end
     known
   end

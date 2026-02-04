@@ -1,3 +1,5 @@
+# Author: Preston Lee
+
 class ServicesController < ApplicationController
   before_action :http_authenticate, except: %i[index show]
   before_action :set_dashboard # , only: %i[create show update destroy]
@@ -8,7 +10,7 @@ class ServicesController < ApplicationController
   def index
     # @services = Service.paginate(page: params[:page], per_page: params[:per_page])
     @services = Service.where(dashboard: @dashboard)
-    sort = %w[name ping updated_at created_at].include?(params[:sort]) ? params[:sort] : :name
+    sort = %w[name updated_at created_at].include?(params[:sort]) ? params[:sort] : :name
     order = params[:order] == 'desc' ? :desc : :asc
     @services = @services.order(sort => order)
     @services = @services.search_by_name(params[:text]) if params[:text]
@@ -98,7 +100,7 @@ class ServicesController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   def service_params
     params.require(:service).permit(:name, :dashboard_id, :host, :port,
-                                    :ping, :ping_threshold, :http, :https,
+                                    :http, :https,
                                     :http_preview, :http_path, :http_xquery)
   end
 end
