@@ -3,7 +3,7 @@ LABEL maintainer="preston.lee@prestonlee.com"
 
 # RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y build-essential imagemagick
 # Install postgres native client package and native image processing
-RUN apt-get update && apt-get install -y build-essential libpq-dev imagemagick
+RUN apt-get update && apt-get install -y build-essential libpq-dev libyaml-dev imagemagick
 
 # Default shell as bash
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
