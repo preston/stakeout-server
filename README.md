@@ -19,6 +19,7 @@ docker run -it --rm --name chrome \
   -e "DISABLE_AUTO_SET_DOWNLOAD_BEHAVIOR=true" \
   -e "DEFAULT_BLOCK_ADS=true" \
   -p 3030:3000 \
+  --pull always \
   browserless/chrome:latest
 ```
 

@@ -6,6 +6,8 @@ default: &default
 development:
   <<: *default
   url:  <%= ENV["STAKEOUT_SERVER_DATABASE_URL"] %>
+  # Pool must cover Puma threads + Async job threads so requests don't block waiting for a connection.
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", "25").to_i %>
 
 test:
   <<: *default
