@@ -1,7 +1,7 @@
 default: &default
   adapter: postgresql
   encoding: utf8
-  pool: <%= (ENV['STAKEOUT_SERVER_THREADS'].to_i + 2) || 10 %>
+  pool: <%= [(ENV['STAKEOUT_SERVER_THREADS'].to_i + 2), 10].max %>
   # Avoid pg gem segfault on arm64 macOS during connect_start (GSS/Kerberos). See e.g. https://github.com/ged/ruby-pg/issues/631
   gssencmode: disable
 
@@ -18,6 +18,8 @@ test:
 production:
   <<: *default
   url:  <%= ENV["STAKEOUT_SERVER_DATABASE_URL"] %>
+  # Pool must cover Solid Queue worker threads (and Puma if same process). Default 25 matches development.
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", "25").to_i %>
 
 # benchmark:
 #   <<: *default
