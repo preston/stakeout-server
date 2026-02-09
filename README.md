@@ -43,6 +43,10 @@ docker run -it --rm -p 3000:3000 --name stakeout-server \
 Background jobs (e.g. service checks) use Solid Queue and run in a separate process. Start the worker with:
 
 ```sh
+# From source
+bundle exec rake solid_queue:start
+
+# Or via container
 docker run -it --rm --name stakeout-worker \
 	-e "STAKEOUT_SERVER_DATABASE_URL=postgresql://stakeout:password@192.168.1.130:5432/stakeout_development" \
 	-e "STAKEOUT_SERVER_CHROME_URL=http://localhost:3030" \
