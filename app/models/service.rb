@@ -56,15 +56,10 @@ class Service < ApplicationRecord
 
     self.http_screenshot = nil # Clear the old screenshots, regardless.
 
-    host = self.host
-    path = http_path
-    path = '/index.html' if path.nil? || path == ''
-
     if http
       port = 80 if self.port == 0
       uri = URI("http://#{self.host}:#{port}#{http_path}")
       Rails.logger.info "[CHECK_DEBUG] http start uri=#{uri}"
-      good = false
       begin
         Net::HTTP.start(uri.host, uri.port, open_timeout: CHECK_OPEN_TIMEOUT_SEC,
                                             read_timeout: CHECK_READ_TIMEOUT_SEC) do |http|
@@ -74,10 +69,8 @@ class Service < ApplicationRecord
           # puts "CODE: #{code}"
           self.http_path_last = (code >= 200 && code < 400)
         end
-      rescue StandardError => e
-        # Possibly a DNS failure or something.
+      rescue StandardError
         self.http_path_last = false
-        # Rails.logger.debug e
       end
       Rails.logger.info "[CHECK_DEBUG] http done http_path_last=#{http_path_last}"
 
@@ -90,7 +83,6 @@ class Service < ApplicationRecord
       port = 443 if self.port == 0
       uri = URI("https://#{self.host}:#{port}#{http_path}")
       Rails.logger.info "[CHECK_DEBUG] https start uri=#{uri}"
-      good = false
       begin
         Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: CHECK_OPEN_TIMEOUT_SEC,
                                             read_timeout: CHECK_READ_TIMEOUT_SEC) do |https|
@@ -100,10 +92,8 @@ class Service < ApplicationRecord
           # puts "CODE HTTPS: #{code}"
           self.https_path_last = (code >= 200 && code < 400)
         end
-      rescue StandardError => e
-        # Possibly a DNS failure or something.
+      rescue StandardError
         self.https_path_last = false
-        # Rails.logger.debug e
       end
       Rails.logger.info "[CHECK_DEBUG] https done https_path_last=#{https_path_last}"
     end
@@ -130,34 +120,18 @@ class Service < ApplicationRecord
   # PNG magic bytes; used to verify Browserless returned an image, not an error body.
   PNG_MAGIC = "\x89PNG\r\n\x1A\n".b
 
+  SCREENSHOT_VIEWPORT = { width: 1280, height: 1280 }.freeze
+  SCREENSHOT_GOTO_OPTIONS = { waitUntil: 'networkidle2', timeout: 5000 }.freeze
+
   def capture_screenshot_via_browserless(uri)
     Rails.logger.info "[CHECK_DEBUG] capture_screenshot_via_browserless start uri=#{uri}"
-    chrome_url = ENV['STAKEOUT_SERVER_CHROME_URL'].to_s.strip
-    if chrome_url.blank?
-      self.http_screenshot = nil
-      Rails.logger.info '[CHECK_DEBUG] capture_screenshot skip (CHROME_URL blank)'
-      return
-    end
+    rest_base = browserless_rest_base_from_env
+    return unless rest_base
 
-    rest_base = browserless_rest_base_url(chrome_url)
-    unless rest_base
-      self.http_screenshot = nil
-      Rails.logger.info '[CHECK_DEBUG] capture_screenshot skip (rest_base nil)'
-      return
-    end
-
-    screenshot_url = "#{rest_base}/screenshot"
-    if ENV['STAKEOUT_SERVER_CHROME_TOKEN'].present?
-      screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}"
-    end
-
-    body = {
-      url: uri.to_s,
-      options: { type: 'png' },
-      gotoOptions: { waitUntil: 'networkidle2', timeout: 5000 }
-    }.to_json
-
-    self.http_screenshot = fetch_screenshot_via_http(screenshot_url, body)
+    self.http_screenshot = fetch_screenshot_via_http(
+      browserless_screenshot_url(rest_base),
+      screenshot_request_body(uri.to_s)
+    )
     Rails.logger.info '[CHECK_DEBUG] capture_screenshot_via_browserless done'
   end
 
@@ -214,31 +188,65 @@ class Service < ApplicationRecord
     end
   end
 
+  # Returns REST base URL from STAKEOUT_SERVER_CHROME_URL, or nil if blank/invalid.
+  def browserless_rest_base_from_env
+    chrome_url = ENV['STAKEOUT_SERVER_CHROME_URL'].to_s.strip
+    if chrome_url.blank?
+      self.http_screenshot = nil
+      Rails.logger.info '[CHECK_DEBUG] capture_screenshot skip (CHROME_URL blank)'
+      return nil
+    end
+    rest_base = browserless_rest_base_url(chrome_url)
+    unless rest_base
+      self.http_screenshot = nil
+      Rails.logger.info '[CHECK_DEBUG] capture_screenshot skip (rest_base nil)'
+      return nil
+    end
+    rest_base
+  end
+
+  def browserless_screenshot_url(rest_base)
+    url = "#{rest_base}/screenshot"
+    url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}" if ENV['STAKEOUT_SERVER_CHROME_TOKEN'].present?
+    url
+  end
+
+  def screenshot_request_body(url)
+    {
+      url: url,
+      viewport: SCREENSHOT_VIEWPORT,
+      options: { type: 'png' },
+      gotoOptions: SCREENSHOT_GOTO_OPTIONS
+    }.to_json
+  end
+
   # Verifies connectivity to Browserless at STAKEOUT_SERVER_CHROME_URL by requesting a
   # minimal screenshot. Returns [true, message] on success, [false, message] on failure.
   def self.verify_chrome_connection
-    chrome_url = ENV['STAKEOUT_SERVER_CHROME_URL'].to_s.strip
-    return [false, 'STAKEOUT_SERVER_CHROME_URL is blank'] if chrome_url.blank?
+    instance = new
+    rest_base = instance.browserless_rest_base_for_verify
+    return rest_base unless rest_base.is_a?(String)
 
-    rest_base = new.browserless_rest_base_url(chrome_url)
-    return [false, "Could not build REST base URL from #{chrome_url.inspect}"] unless rest_base
-
-    screenshot_url = "#{rest_base}/screenshot"
-    if ENV['STAKEOUT_SERVER_CHROME_TOKEN'].present?
-      screenshot_url += "?token=#{ERB::Util.url_encode(ENV['STAKEOUT_SERVER_CHROME_TOKEN'])}"
-    end
-    body = {
-      url: 'about:blank',
-      options: { type: 'png' },
-      gotoOptions: { waitUntil: 'networkidle2', timeout: 5000 }
-    }.to_json
-
-    result = new.fetch_screenshot_via_http(screenshot_url, body)
+    result = instance.fetch_screenshot_via_http(
+      instance.browserless_screenshot_url(rest_base),
+      instance.screenshot_request_body('about:blank')
+    )
     if result.present? && result.start_with?(PNG_MAGIC)
       [true, "Chrome at #{rest_base} returned PNG (OK)"]
     else
       [false, result.present? ? 'Chrome returned non-PNG body' : "Chrome unreachable or returned error at #{rest_base}"]
     end
+  end
+
+  # Returns rest_base string on success, or [false, message] for verify_chrome_connection.
+  def browserless_rest_base_for_verify
+    chrome_url = ENV['STAKEOUT_SERVER_CHROME_URL'].to_s.strip
+    return [false, 'STAKEOUT_SERVER_CHROME_URL is blank'] if chrome_url.blank?
+
+    rest_base = browserless_rest_base_url(chrome_url)
+    return [false, "Could not build REST base URL from #{chrome_url.inspect}"] unless rest_base
+
+    rest_base
   end
 
   def known_good(since)
