@@ -1,10 +1,10 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '4.0.1'
+ruby '4.0.3'
 
 gem 'bootsnap', require: false # Reduces boot times through caching; required in config/boot.rb
-gem 'rails', '~> 8.1.2'	# Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
+gem 'rails', '~> 8.1.3'	# Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 
 gem 'jbuilder'	# Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 
